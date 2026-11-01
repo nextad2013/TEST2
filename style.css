@@ -55,3 +55,10 @@ body{font-size:16px}header{height:auto;min-height:78px;flex-wrap:wrap;padding-to
 .move-area{position:relative;flex:1;min-width:112px;min-height:140px;display:flex;align-items:center;justify-content:flex-start;padding-left:10px;touch-action:none;user-select:none}
 @media(max-width:700px),(pointer:coarse){.touch{gap:12px;padding-left:max(18px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}.touch .joystick{width:104px;height:104px;flex:none}.touch .action-buttons{flex:none}.move-area:active{background:radial-gradient(ellipse,#91b7db0c,transparent 70%)}body{padding-bottom:175px}}
 @media(max-width:380px){.touch{gap:8px;padding-left:8px;padding-right:8px}.move-area{min-width:112px}.touch .joystick{width:100px;height:100px}}
+
+@media(max-width:700px),(pointer:coarse){
+ .intro h1{display:flex;align-items:baseline;flex-wrap:nowrap;gap:3px;font-size:clamp(14px,4.4vw,22px);letter-spacing:-.5px;white-space:nowrap;line-height:1.3}.intro h1>span{display:inline;margin-top:0;font-size:14px;letter-spacing:0;white-space:nowrap;line-height:1.3}.intro h1>span i{font-size:14px;margin:0}
+ .score{grid-template-columns:auto auto minmax(64px,1fr) auto auto;gap:3px;padding:6px;align-items:center}.score-team,.score-team-right{grid-row:1;grid-column:auto;flex-direction:row;align-items:center;gap:2px;white-space:nowrap}.score-team{justify-content:flex-start}.score-team-right{justify-content:flex-end}.score-team-right>b{order:0}.score-team .score-team-name{display:none}.score-team>span{font-size:16px;line-height:1}.score .score-team b{font-size:18px;line-height:1.2;padding:2px 2px;border-radius:6px;white-space:nowrap}
+ .wins,.wins.yellow{grid-row:1;grid-column:auto;justify-self:stretch;font-size:14px;min-height:30px;padding:3px 2px;border-radius:8px}.wins .wins-dots{gap:3px}.wins .win-dot{width:14px;height:14px;border-width:2px}.clock{grid-column:auto;grid-row:1;padding:0}.clock small{font-size:14px;line-height:1.1;letter-spacing:0}.clock strong{font-size:28px;line-height:1.05}
+}
+@media(max-width:360px){.wins .win-dot{width:12px;height:12px}.intro h1{gap:1px;font-size:14px}}
