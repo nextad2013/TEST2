@@ -26,12 +26,12 @@ test('shield stops movement and attacks, cancels a pending bite and prevents bla
  assert.equal(g.move(a,1),false);a.cool=0;assert.equal(g.attack(a),false);assert.equal(g.defeat(a),false);assert.equal(g.special(a),false);assert.equal(a.specialLeft,2);
  g.fire.push({cells:[[a.x,a.y]],t:3,team:0});g.update(1.99);assert.equal(a.alive,true);assert.equal(a.x,5);assert.ok(a.shield>0);g.update(.02);assert.equal(a.shield,0);assert.equal(a.alive,false);
 });
-test('only three charges are available per actor and persist through supplied match stock',()=>{
+test('three charges per actor are restored at the start of every new round',()=>{
  const g=arena(),a=g.player;
  for(let n=0;n<3;n++){a.dir=n%2?3:1;assert.equal(g.special(a),true);}
  assert.equal(a.specialLeft,0);assert.equal(g.special(a),false);
- const stock=Object.fromEntries(g.actors.map(e=>[e.id,e.specialLeft]));const next=new Battle(1,0,()=>.9,stock);
- assert.equal(next.player.specialLeft,0);assert.equal(next.actors[1].specialLeft,3);assert.equal(new Battle().player.specialLeft,3);
+ const next=new Battle(4,0,()=>.9);
+ assert.ok(next.actors.every(a=>a.specialLeft===3));
 });
 test('dash cannot bypass an enemy contact or be activated after death or round end',()=>{
  const g=arena(),a=g.player,e=g.actors[1];e.x=6;e.y=3;g.special(a);assert.equal(a.alive,false);assert.equal(a.x,6);assert.equal(g.special(a),false);
