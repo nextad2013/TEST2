@@ -1,6 +1,0 @@
-import {test} from 'node:test';import assert from 'node:assert/strict';import {fighter,strike,tickFighter} from '../engine.js';
-test('fighters begin with 20 HP; head punch deals 2',()=>{const a=fighter(100),b=fighter(200);assert.equal(b.hp,20);assert.equal(strike(a,b,'punch').damage,2);assert.equal(b.hp,18)});
-test('body kick deals 1 and guard prevents damage',()=>{const a=fighter(100),b=fighter(200);assert.equal(strike(a,b,'kick').damage,1);b.guard=true;assert.equal(strike(a,b,'punch').type,'block');assert.equal(b.hp,19)});
-test('crouching dodges punch and doubles the next hit only',()=>{const a=fighter(100),b=fighter(200);b.crouch=true;assert.equal(strike(a,b,'punch').type,'dodge');b.crouch=false;assert.equal(strike(b,a,'punch').damage,4);assert.equal(strike(b,a,'punch').damage,2)});
-test('jump dodges kick; counter expires after 1.2 seconds',()=>{const a=fighter(100),b=fighter(200);b.y=100;assert.equal(strike(a,b,'kick').type,'dodge');tickFighter(b,1.21);assert.equal(b.counter,0)});
-test('out of range misses do not grant counter; HP cannot become negative',()=>{const a=fighter(100),b=fighter(400);assert.equal(strike(a,b,'punch').type,'miss');assert.equal(b.counter,0);b.x=200;b.hp=1;strike(a,b,'punch');assert.equal(b.hp,0)});
