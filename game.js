@@ -29,6 +29,19 @@ for(const id of['#special','#touch-special']){
  button.onpointerup=button.onpointercancel=()=>keys.delete('Enter');
  button.onclick=e=>{if(e.detail===0)specialQueued=true;};
 }
+// Move the live score and power widgets, rather than duplicating their IDs or state.
+const landscapeQuery='(orientation: landscape) and (max-height: 600px) and (pointer: coarse)';
+if(window.matchMedia){
+ const media=window.matchMedia(landscapeQuery),score=document.querySelector('.score'),powers=$('#powers');
+ const scoreHome={parent:score.parentNode,next:score.nextSibling},powersHome={parent:powers.parentNode,next:powers.nextSibling};
+ const applyLandscape=()=>{
+  releaseStick();
+  if(media.matches){$('#landscape-score-slot').appendChild(score);$('#landscape-power-slot').appendChild(powers);}
+  else{scoreHome.parent.insertBefore(score,scoreHome.next);powersHome.parent.insertBefore(powers,powersHome.next);}
+ };
+ if(media.addEventListener)media.addEventListener('change',applyLandscape);else media.addListener(applyLandscape);
+ applyLandscape();
+}
 function sound(type){if(muted||!audio)return;const o=audio.createOscillator(),g=audio.createGain();o.connect(g);g.connect(audio.destination);o.type=type==='boom'?'sawtooth':'sine';o.frequency.setValueAtTime(({boom:95,pickup:720,out:180,bite:280,place:350,eat:520,dash:950,shield:640,kick:430})[type]||300,audio.currentTime);o.frequency.exponentialRampToValueAtTime(45,audio.currentTime+.15);g.gain.setValueAtTime(.035,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+.18);o.start();o.stop(audio.currentTime+.2);}
 function rect(x,y,w,h,color,r=5){ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill();}
 function text(s,x,y,size,color='#fff'){ctx.fillStyle=color;ctx.font=`bold ${size}px Arial`;ctx.textAlign='center';ctx.fillText(s,x,y);}
@@ -147,6 +160,12 @@ function renderPowers(p){
  const name=p.team?'不死':'瞬速',symbol=p.team?'⬡':'⟫';
  for(const id of['#special','#touch-special']){const special=$(id);special.disabled=!playing||paused||game.finished||!p.alive||p.specialLeft<=0||p.shield>0;special.innerHTML=`<span aria-hidden="true">${symbol}</span><b>${name} ×${p.specialLeft}</b><small>${p.shield>0?'不死中 '+p.shield.toFixed(1)+'秒':id==='#touch-special'?'ENTER':'ENTER / 1ラウンド3回'}</small>`;special.setAttribute?.('aria-label',`${name} 残り${p.specialLeft}回 Enterキー`);}
  $('#special-note').textContent=p.team?'1.5秒静止して無敵。使用後1.5秒点滅。':'2マス移動・ブロック破壊・爆弾通過。発光・残像0.3秒。';
+ const portrait=$('#landscape-portrait'),portraitSource=p.team?'assets/makima-portrait.png':'assets/reze-portrait.png?v=bomb-charm';
+ if(portrait.getAttribute?.('src')!==portraitSource)portrait.setAttribute?.('src',portraitSource);
+ $('#landscape-name').textContent=p.team?'冷徹のパックマスター':'灼熱のボムガール';
+ $('#landscape-tagline').textContent=p.team?'捕食×不死':'爆撃×瞬速';
+ $('#landscape-special').textContent=(p.alive?'':'退場 ／ ')+(p.team?'不死':'瞬速')+' ×'+p.specialLeft;
+
 
 }
 function drawActor(a,S){
