@@ -1,5 +1,11 @@
 export const DIRS=[[0,-1],[1,0],[0,1],[-1,0]];
 export const CONFIG={fuse:2,fire:.48,baseStep:16/60,biteCooldown:.9,roundTime:120};
+// Rendering follows the existing movement timer; collision and CPU keep grid positions.
+export function visualPosition(a){
+ if(!a.motion||a.wait<=0)return {x:a.x,y:a.y};
+ const progress=Math.max(0,Math.min(1,1-a.wait/a.motion.duration));
+ return {x:a.motion.x+(a.x-a.motion.x)*progress,y:a.motion.y+(a.y-a.motion.y)*progress};
+}
 export class Battle{
  constructor(n=2,team=0,random=Math.random){this.n=n;this.team=team;this.random=random;this.w=16;this.h=16;this.time=120;this.bombs=[];this.fire=[];this.items=[];this.bites=[];this.actors=[];this.events=[];this.finished=false;this.result=null;this.map=Array.from({length:this.h},(_,y)=>Array.from({length:this.w},(_,x)=>x===0||y===0||x===this.w-1||y===this.h-1||(x%2===0&&y%2===0)?1:random()<.36?2:0));
  for(let t=0;t<2;t++)for(let i=0;i<n;i++){const x=t?this.w-2:1,y=1+i*2;this.actors.push({id:t*4+i,team:t,x,y,dir:t?3:1,alive:true,level:[1,1],wait:0,cool:0,ai:0,human:t===team&&i===0});for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(this.map[y+dy]?.[x+dx]===2)this.map[y+dy][x+dx]=0;}}
@@ -10,7 +16,7 @@ export class Battle{
  get player(){return this.actors.find(a=>a.human)}
  cells(b){const cells=[[b.x,b.y]];for(const [dx,dy]of DIRS){const len=Math.max(1,Math.floor(((dx?this.w:this.h)*b.level/3-1)/2));for(let i=1;i<=len;i++){const x=b.x+dx*i,y=b.y+dy*i,v=this.map[y]?.[x];if(v===undefined||v===1)break;cells.push([x,y]);if(v===2)break;}}return cells;}
  bombAt(x,y){return this.bombs.find(b=>b.x===x&&b.y===y)}
- move(a,d){if(!a.alive||a.wait>0||this.finished)return false;a.dir=d;const [dx,dy]=DIRS[d],x=a.x+dx,y=a.y+dy;if(this.map[y]?.[x]!==0||this.bombAt(x,y))return false;a.x=x;a.y=y;a.wait=CONFIG.baseStep/(a.team?[1,1.5,2][a.level[0]-1]:1);this.pickup(a);return true;}
+ move(a,d){if(!a.alive||a.wait>0||this.finished)return false;a.dir=d;const [dx,dy]=DIRS[d],x=a.x+dx,y=a.y+dy;if(this.map[y]?.[x]!==0||this.bombAt(x,y))return false;a.motion={x:a.x,y:a.y,duration:CONFIG.baseStep/(a.team?[1,1.5,2][a.level[0]-1]:1)};a.x=x;a.y=y;a.wait=a.motion.duration;this.pickup(a);return true;}
  pickup(a){const item=this.items.find(i=>i.x===a.x&&i.y===a.y);if(item){const ability=a.team?1-item.kind:item.kind;a.level[ability]=Math.min(3,a.level[ability]+1);this.items.splice(this.items.indexOf(item),1);this.events.push('pickup');}}
  attack(a){if(!a.alive||a.cool>0||this.finished)return false;if(!a.team){if(this.bombAt(a.x,a.y)||this.bombs.filter(b=>b.owner===a.id).length>=a.level[1])return false;this.bombs.push({x:a.x,y:a.y,t:2,level:a.level[0],owner:a.id,team:0});a.cool=.3;this.events.push('place');return true;}
  this.bites.push({x:a.x,y:a.y,dir:a.dir,reach:a.level[1],t:.16+.08*(a.level[1]-1),visible:.55,active:.24,actor:a.id,done:false});a.cool=CONFIG.biteCooldown+.08*(a.level[1]-1);this.events.push('bite');return true;}

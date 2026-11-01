@@ -1,4 +1,4 @@
-import{Battle,DIRS}from'./battle.js';
+import{Battle,DIRS,visualPosition}from'./battle.js';
 const $=s=>document.querySelector(s),canvas=$('#game');let ctx=canvas.getContext('2d');let team=0,game=new Battle(2,0),playing=false,paused=false,scores=[0,0],round=1,keys=new Set(),touchDir,muted=true,audio;const colors=['#ff7dab','#ffdc72'];const characterColors=['#f24f61','#508fff','#252936','#f4f2ed','#ffdb54','#ff933f','#f78fbd','#63ce91'];
 function overlay(label,title,text,button){$('#overlay').hidden=false;$('#overlabel').textContent=label;$('#overtitle').textContent=title;$('#overtext').textContent=text;$('#start').textContent=button;}
 function next(){if(scores.some(s=>s>=3)){scores=[0,0];round=1;}game=new Battle(Number($('#size').value),team);playing=true;paused=false;$('#pause').textContent='一時停止';$('#overlay').hidden=true;$('#size').disabled=true;document.querySelectorAll('.team').forEach(b=>b.disabled=true);}
@@ -46,13 +46,14 @@ function bombGirl(a,S){
  shape([[.21,.20],[.255,.31],[.21,.33],[.16,.22]],'#f9d4c7');
  rect(-S*.245,S*.235,S*.065,S*.045,accent,S*.01);rect(S*.18,S*.235,S*.065,S*.045,accent,S*.01);
  rect(-S*.19,S*.30,S*.38,S*.055,accent,S*.015);
- shape([[-.10,.15],[0,.24],[-.055,.27],[-.16,.19]],'#fffefa',edge);
- shape([[.10,.15],[0,.24],[.055,.27],[.16,.19]],'#fffefa',edge);
- shape([[0,.205],[-.035,.25],[-.018,.325],[.018,.325],[.035,.25]],'#292330');
+ shape([[-.10,.255],[0,.30],[-.055,.325],[-.16,.27]],'#fffefa',edge);
+ shape([[.10,.255],[0,.30],[.055,.325],[.16,.27]],'#fffefa',edge);
+ shape([[0,.285],[-.025,.31],[-.015,.342],[.015,.342],[.025,.31]],'#292330');
  oval(0,-.025,.216,.224,'#ffe0d2');
- // Narrow black choker and its silver pin, drawn below the chin.
- rect(-S*.09,S*.155,S*.18,S*.035,'#211e29',S*.008);
- ctx.strokeStyle='#e1dce8';ctx.lineWidth=S*.012;ctx.beginPath();ctx.arc(0,S*.179,S*.021,0,Math.PI*2);ctx.stroke();
+ // Exposed neck separates the real mouth and chin from the choker.
+ rect(-S*.075,S*.190,S*.15,S*.085,'#f6cdbf',S*.018);
+ rect(-S*.085,S*.232,S*.17,S*.034,'#211e29',S*.006);
+ ctx.strokeStyle='#e1dce8';ctx.lineWidth=S*.012;ctx.beginPath();ctx.arc(0,S*.273,S*.020,0,Math.PI*2);ctx.stroke();
  // Green eyes, soft lids and small highlights.
  for(const k of[-1,1]){
   oval(k*.088,.014,.047,.060,'#302536');oval(k*.088,.032,.032,.040,'#6ea98a');oval(k*.088,.032,.014,.030,'#273e36');
@@ -104,12 +105,12 @@ function biteIcon(b,x,y,S){
  if(active){ctx.strokeStyle='#fff6d0';ctx.lineWidth=S*.025;for(const sign of[-1,1]){ctx.beginPath();ctx.moveTo(r*1.12,sign*r*.16);ctx.lineTo(r*1.38,sign*r*.39);ctx.stroke();}}
  ctx.restore();
 }
-function render(){const S=canvas.width/game.w;canvas.height=game.h*S;ctx.clearRect(0,0,canvas.width,canvas.height);game.map.forEach((row,y)=>row.forEach((v,x)=>{rect(x*S+1,y*S+1,S-2,S-2,(x+y)%2?'#202738':'#242c3e',3);if(v===1){rect(x*S+2,y*S+2,S-4,S-4,'#414b66',6);rect(x*S+5,y*S+4,S-10,5,'#5c6985',2);}if(v===2){rect(x*S+4,y*S+4,S-8,S-8,'#756080',5);rect(x*S+8,y*S+8,S-16,3,'#aa89ad',1);text('×',x*S+S/2,y*S+S*.67,S*.37,'#a68aaa');}}));
+function render(){const S=canvas.width/game.w;if(canvas.height!==game.h*S)canvas.height=game.h*S;ctx.clearRect(0,0,canvas.width,canvas.height);game.map.forEach((row,y)=>row.forEach((v,x)=>{rect(x*S+1,y*S+1,S-2,S-2,(x+y)%2?'#202738':'#242c3e',3);if(v===1){rect(x*S+2,y*S+2,S-4,S-4,'#414b66',6);rect(x*S+5,y*S+4,S-10,5,'#5c6985',2);}if(v===2){rect(x*S+4,y*S+4,S-8,S-8,'#756080',5);rect(x*S+8,y*S+8,S-16,3,'#aa89ad',1);text('×',x*S+S/2,y*S+S*.67,S*.37,'#a68aaa');}}));
  for(const b of game.bombs)if(b.t<.65)for(const[x,y]of game.cells(b))rect(x*S+3,y*S+3,S-6,S-6,`rgba(255,100,124,${.12+Math.sin(performance.now()/70)*.08})`);
  for(const i of game.items){const x=i.x*S,y=i.y*S;rect(x+S*.12,y+S*.12,S*.76,S*.76,'#fff2da',7);rect(x+S*.16,y+S*.16,S*.68,S*.68,i.kind?'#925a34':'#9853d6',5);text('UP',x+S*.5,y+S*.59,S*.30,'#ffffff');text(i.kind?'Ⅱ':'Ⅰ',x+S*.5,y+S*.79,S*.13,'#fff2da');}
  for(const b of game.bombs){const x=(b.x+.5)*S,y=(b.y+.55)*S;ctx.fillStyle=b.t<.55&&Math.sin(performance.now()/55)>0?'#ff6582':'#111728';ctx.beginPath();ctx.arc(x,y,S*.27,0,7);ctx.fill();text('✧',x-S*.07,y,S*.25,'#b6c0dd');text('✹',x+S*.15,y-S*.25,S*.25,'#ffce72');}
  for(const b of game.bites){for(const[x,y]of game.biteCells(b))rect(x*S+5,y*S+5,S-10,S-10,b.t<=0&&!b.done?'#ffe49eaa':'#ffe49e33');}
- for(const a of game.actors)girl(a,S);
+ for(const a of game.actors)girl({...a,...visualPosition(a)},S);
  for(const b of game.bites)for(const[x,y]of game.biteCells(b))biteIcon(b,x,y,S);
  for(const f of game.fire)for(const[x,y]of f.cells){rect(x*S+2,y*S+2,S-4,S-4,'#ff9c58cc',6);text('✦',(x+.5)*S,(y+.74)*S,S*.68,'#fff3af');}
  $('#left').textContent=`${scores[0]} · ${game.actors.filter(a=>a.team===0&&a.alive).length}人`;$('#right').textContent=`${scores[1]} · ${game.actors.filter(a=>a.team===1&&a.alive).length}人`;$('#time').textContent=Math.ceil(game.time);$('#round').textContent=`ROUND ${String(round).padStart(2,'0')}`;const p=game.player,dots=n=>'●'.repeat(n)+'○'.repeat(3-n);$('#powers').textContent=p.team?`速度 ${dots(p.level[0])}  ${[1,1.5,2][p.level[0]-1]}倍\n捕食 ${dots(p.level[1])}  ${p.level[1]}マス`:`爆風 ${dots(p.level[0])}  ${['1/3','2/3','MAX'][p.level[0]-1]}\n設置 ${dots(p.level[1])}  ${p.level[1]}個`;$('#status').textContent=paused?'● PAUSED':!playing?'● READY TO PLAY':p.alive?'● BATTLE IN PROGRESS':'● 退場 — CPUの対戦を観戦中';}
