@@ -62,3 +62,10 @@ body{font-size:16px}header{height:auto;min-height:78px;flex-wrap:wrap;padding-to
  .wins,.wins.yellow{grid-row:1;grid-column:auto;justify-self:stretch;font-size:14px;min-height:30px;padding:3px 2px;border-radius:8px}.wins .wins-dots{gap:3px}.wins .win-dot{width:14px;height:14px;border-width:2px}.clock{grid-column:auto;grid-row:1;padding:0}.clock small{font-size:14px;line-height:1.1;letter-spacing:0}.clock strong{font-size:28px;line-height:1.05}
 }
 @media(max-width:360px){.wins .win-dot{width:12px;height:12px}.intro h1{gap:1px;font-size:14px}}
+
+/* Restore title emphasis while leaving one space before the subtitle. */
+.intro h1{column-gap:.4em}
+@media(max-width:700px),(pointer:coarse){
+ .intro{margin-left:-8px;margin-right:-8px}.intro h1{font-size:clamp(18px,5.9vw,28px);gap:.4em;letter-spacing:-.5px}.intro h1>span{font-size:14px;letter-spacing:-.3px}
+}
+@media(max-width:360px){.intro h1{font-size:18px;gap:.35em}.intro h1>span{letter-spacing:-.7px}}
