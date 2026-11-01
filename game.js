@@ -104,10 +104,10 @@ function packGirl(a,S){
 function girl(a,S){if(a.team===0)bombGirl(a,S);else packGirl(a,S);}
 function biteIcon(b,x,y,S){
  const owner=game.actors.find(a=>a.id===b.actor);if(!owner?.alive)return;
- const ownCell=x===owner.x&&y===owner.y,active=b.t<=0&&!b.done;
+ const ownCell=x===owner.x&&y===owner.y,active=b.contact?b.visible>.25:b.t<=0&&!b.done;
  ctx.save();ctx.translate((x+.5)*S,(y+(ownCell?.20:.5))*S);ctx.rotate((b.dir-1)*Math.PI/2);
  const r=S*(ownCell?.19:.31),mouth=active?.17:.31;
- ctx.globalAlpha=b.done?.45:1;ctx.shadowColor='#ffec89';ctx.shadowBlur=active?9:3;
+ ctx.globalAlpha=b.done&&!b.contact?.45:1;ctx.shadowColor='#ffec89';ctx.shadowBlur=active?9:3;
  ctx.fillStyle=active?'#ffcf4c':'#ffe68a';ctx.strokeStyle='#5b3629';ctx.lineWidth=Math.max(1.5,S*.035);
  ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,r,Math.PI*mouth,Math.PI*(2-mouth));ctx.closePath();ctx.fill();ctx.stroke();
  ctx.shadowBlur=0;ctx.fillStyle='#332939';ctx.beginPath();ctx.arc(-r*.13,-r*.56,r*.095,0,7);ctx.fill();
@@ -120,7 +120,7 @@ function render(){const S=canvas.width/game.w;if(canvas.height!==game.h*S)canvas
  for(const b of game.bombs)if(b.t<.65)for(const[x,y]of game.cells(b))rect(x*S+3,y*S+3,S-6,S-6,`rgba(255,100,124,${.12+Math.sin(performance.now()/70)*.08})`);
  for(const i of game.items){const x=i.x*S,y=i.y*S;rect(x+S*.12,y+S*.12,S*.76,S*.76,'#fff2da',7);rect(x+S*.16,y+S*.16,S*.68,S*.68,i.kind?'#925a34':'#9853d6',5);text('UP',x+S*.5,y+S*.59,S*.30,'#ffffff');text(i.kind?'Ⅱ':'Ⅰ',x+S*.5,y+S*.79,S*.13,'#fff2da');}
  for(const b of game.bombs){const x=(b.x+.5)*S,y=(b.y+.55)*S;ctx.fillStyle=b.t<.55&&Math.sin(performance.now()/55)>0?'#ff6582':'#111728';ctx.beginPath();ctx.arc(x,y,S*.27,0,7);ctx.fill();text('✧',x-S*.07,y,S*.25,'#b6c0dd');text('✹',x+S*.15,y-S*.25,S*.25,'#ffce72');}
- for(const b of game.bites){for(const[x,y]of game.biteCells(b))rect(x*S+5,y*S+5,S-10,S-10,b.t<=0&&!b.done?'#ffe49eaa':'#ffe49e33');}
+ for(const b of game.bites){for(const[x,y]of game.biteCells(b))rect(x*S+5,y*S+5,S-10,S-10,b.contact||b.t<=0&&!b.done?'#ffe49eaa':'#ffe49e33');}
  for(const a of game.actors)girl({...a,...visualPosition(a)},S);
  for(const b of game.bites)for(const[x,y]of game.biteCells(b))biteIcon(b,x,y,S);
  for(const f of game.fire)for(const[x,y]of f.cells){rect(x*S+2,y*S+2,S-4,S-4,'#ff9c58cc',6);text('✦',(x+.5)*S,(y+.74)*S,S*.68,'#fff3af');}

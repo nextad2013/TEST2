@@ -75,3 +75,21 @@ test('bomber brown UP caps movement at 1.3 and 1.6 with bomb capacity retained',
  }
  g.items.push({x:a.x,y:a.y,kind:1});g.pickup(a);assert.equal(speedMultiplier(a),1.6);
 });
+
+test('overlap automatically eats without attack even during cooldown and shows bite action',()=>{
+ const g=arena(1,1),a=g.player,e=g.actors[0];a.x=e.x=5;a.y=e.y=3;a.cool=5;g.update(.01);
+ assert.equal(e.alive,false);const effect=g.bites.find(b=>b.contact);assert.ok(effect);assert.equal(effect.reach,0);assert.ok(g.events.includes('bite'));assert.ok(g.events.includes('out'));
+});
+test('either team moving into the other triggers immediate contact capture',()=>{
+ for(const movingTeam of[0,1]){const g=arena(1,1),a=g.player,e=g.actors[0];a.x=6;a.y=3;e.x=5;e.y=3;
+  assert.equal(g.move(movingTeam?a:e,movingTeam?3:1),true);assert.equal(e.alive,false);
+ }
+});
+test('contact captures only same-cell enemies, never adjacent ones or allies',()=>{
+ const g=arena(2,1),a=g.player,e=g.actors[0],other=g.actors[1],ally=g.actors[3];a.x=e.x=ally.x=5;a.y=e.y=ally.y=3;other.x=6;other.y=3;g.update(.01);
+ assert.equal(e.alive,false);assert.equal(other.alive,true);assert.equal(ally.alive,true);
+});
+test('contact effect disappears after half a second and does not repeat',()=>{
+ const g=arena(2,1),a=g.player,e=g.actors[0];a.x=e.x=5;a.y=e.y=3;g.update(.01);for(let i=0;i<60;i++)g.update(.01);
+ assert.equal(g.bites.length,0);assert.equal(g.events.filter(e=>e==='out').length,1);
+});
