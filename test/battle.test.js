@@ -98,3 +98,13 @@ test('RG bomb rays are 2 then 5 then to edge and respect walls',()=>{
 test('last defeat waits two seconds before result while ascending and freezes combat',()=>{
  const g=arena(1,1),a=g.player,e=g.actors[0];a.x=e.x=5;a.y=e.y=3;g.update(.01);assert.equal(g.finished,true);assert.equal(g.resultReady,false);assert.ok(e.death);const time=g.time;g.update(1);assert.equal(g.resultReady,false);assert.equal(e.death.elapsed,1);g.update(.99);assert.equal(g.resultReady,false);g.update(.02);assert.equal(g.resultReady,true);assert.equal(g.time,time);assert.equal(g.move(a,1),false);
 });
+
+test('two-axis input falls back to the open direction and never moves twice per tick',()=>{
+ const g=arena(),a=g.player;a.x=5;a.y=3;g.map[2][5]=1;g.map[3][6]=0;g.update(.01,{dir:0,dirs:[0,1]});assert.equal(a.x,6);assert.equal(a.y,3);
+});
+test('diagonal input alternates axes at normal step speed without cutting corners',()=>{
+ const g=arena(),a=g.player;a.x=5;a.y=3;g.map[2][5]=g.map[2][6]=0;
+ g.update(.01,{dir:0,dirs:[0,1]});assert.equal(a.x,5);assert.equal(a.y,2);assert.equal(a.wait,CONFIG.baseStep);
+ g.update(.01,{dir:0,dirs:[0,1]});assert.equal(a.x,5);assert.equal(a.y,2);
+ a.wait=0;g.update(.01,{dir:0,dirs:[0,1]});assert.equal(a.x,6);assert.equal(a.y,2);
+});
