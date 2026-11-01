@@ -1,4 +1,4 @@
-import{directionsFromStick}from'./controls.js';
+import{directionsFromStick}from'./controls.js?v=dominant-axis-20261101';
 import{Battle,DIRS,visualPosition,bombVisualPosition,speedMultiplier,POWER,attackCooldown}from'./battle.js';
 const $=s=>document.querySelector(s),canvas=$('#game');let ctx=canvas.getContext('2d');let team=0,game=new Battle(2,0),playing=false,paused=false,scores=[0,0],round=1,keys=new Set(),touchDirs=[],specialQueued=false,muted=true,audio;const colors=['#ff7dab','#ffdc72'];const characterColors=['#f24f61','#508fff','#252936','#f4f2ed','#ffdb54','#ff933f','#f78fbd','#63ce91'];
 function overlay(label,title,text,button){$('#overlay').hidden=false;$('#overlabel').textContent=label;$('#overtitle').textContent=title;$('#overtext').textContent=text;$('#start').textContent=button;}

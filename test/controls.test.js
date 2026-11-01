@@ -4,7 +4,7 @@ test('single circular pad selects all four directions and has a center dead zone
  assert.equal(directionFromStick(0,0),undefined);assert.equal(directionFromStick(6,6),undefined);
 });
 
-test('all diagonal sectors activate the horizontal and vertical directions together',()=>{
- for(const [x,y,expected]of[[40,-40,[0,1]],[40,40,[2,1]],[-40,-40,[0,3]],[-40,40,[2,3]],[35,-15,[1,0]],[15,-35,[0,1]]])assert.deepEqual(directionsFromStick(x,y),expected);
- assert.deepEqual(directionsFromStick(0,0),[]);assert.deepEqual(directionsFromStick(45,2),[1]);
+test('diagonal presses select only the slightly stronger axis in every quadrant',()=>{
+ for(const [x,y,expected]of[[40.01,-40,[1]],[40,-40.01,[0]],[40.01,40,[1]],[40,40.01,[2]],[-40.01,-40,[3]],[-40,-40.01,[0]],[-40.01,40,[3]],[-40,40.01,[2]],[35,-15,[1]],[15,-35,[0]]])assert.deepEqual(directionsFromStick(x,y),expected);
+ assert.deepEqual(directionsFromStick(0,0),[]);assert.equal(directionsFromStick(40,40).length,1);
 });
