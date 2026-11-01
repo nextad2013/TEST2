@@ -64,11 +64,22 @@ function packGirl(a,S){
  shape([[-.12,.15],[-.20,.21],[-.18,.33],[.18,.33],[.20,.21],[.12,.15]],'#fff7e9',edge);
  oval(-.205,.25+swing,.043,.061,'#ffdfcb');oval(.205,.25-swing,.043,.061,'#ffdfcb');
  rect(-S*.23,S*.205,S*.065,S*.045,accent,S*.012);rect(S*.165,S*.205,S*.065,S*.045,accent,S*.012);
- shape([[-.105,.16],[0,.215],[-.05,.245],[-.15,.19]],'#ffffff',edge);shape([[.105,.16],[0,.215],[.05,.245],[.15,.19]],'#ffffff',edge);
- shape([[0,.205],[-.03,.24],[-.02,.305],[.02,.305],[.03,.24]],'#302a35');
+ // Bare neck, open white collar, and a distinctly vertical tie below the jaw.
+ rect(-S*.065,S*.165,S*.13,S*.078,'#ffdfcb',S*.014);
+ shape([[-.085,.225],[0,.26],[-.055,.285],[-.145,.24]],'#ffffff',edge);
+ shape([[.085,.225],[0,.26],[.055,.285],[.145,.24]],'#ffffff',edge);
+ shape([[0,.25],[-.025,.275],[0,.292],[.025,.275]],'#302a35');
+ shape([[0,.285],[-.021,.307],[0,.335],[.021,.307]],'#302a35');
  rect(-S*.16,S*.31,S*.32,S*.045,accent,S*.012);
  oval(-.085,.355+swing,.057,.036,'#342a39');oval(.085,.355-swing,.057,.036,'#342a39');
- oval(0,-.02,.225,.228,'#ffe1ce');
+ // Taper the cheeks toward a small V-shaped chin instead of a round face.
+ ctx.fillStyle='#ffe1ce';ctx.beginPath();ctx.moveTo(-S*.218,-S*.065);
+ ctx.bezierCurveTo(-S*.225,-S*.235,S*.225,-S*.235,S*.218,-S*.065);
+ ctx.bezierCurveTo(S*.216,S*.070,S*.120,S*.145,S*.022,S*.188);
+ ctx.quadraticCurveTo(0,S*.200,-S*.022,S*.188);
+ ctx.bezierCurveTo(-S*.120,S*.145,-S*.216,S*.070,-S*.218,-S*.065);
+ ctx.closePath();ctx.fill();
+ ctx.strokeStyle='#d3a18d';ctx.lineWidth=S*.009;ctx.stroke();
  // Makima's golden ringed eyes: strong outer shape, amber iris, concentric ring.
  for(const k of[-1,1]){
   oval(k*.091,.012,.049,.067,'#522c32');oval(k*.091,.025,.037,.052,'#ffc04e');
