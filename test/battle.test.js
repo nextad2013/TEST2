@@ -33,3 +33,23 @@ test('smooth movement turns at cell centers without diagonal wall clipping',()=>
  const g=arena(),a=g.player;a.x=5;a.y=3;g.move(a,1);a.wait=0;g.map[4][6]=0;g.move(a,2);a.wait=a.motion.duration/2;
  assert.deepEqual(visualPosition(a),{x:6,y:3.5});
 });
+
+test('holding attack never retriggers pack bite even after cooldown',()=>{
+ const g=arena(1,1);g.update(.01,{attack:true});assert.equal(g.events.filter(e=>e==='bite').length,1);
+ for(let i=0;i<100;i++)g.update(.02,{attack:true});
+ assert.equal(g.events.filter(e=>e==='bite').length,1);assert.equal(g.bites.length,0);
+ g.update(.01,{attack:false});g.update(.01,{attack:true});assert.equal(g.events.filter(e=>e==='bite').length,2);
+});
+test('all reach levels disappear by 0.5 seconds with a shorter hit window',()=>{
+ for(const level of[1,2,3]){const g=arena(1,1),a=g.player;a.level[1]=level;g.attack(a);
+  assert.equal(g.bites[0].active,.12);for(let i=0;i<51;i++)g.update(.01);
+  assert.equal(g.bites.length,0);
+ }
+});
+test('a successful bite stops damaging additional enemies during its fade',()=>{
+ const g=arena(2,1),a=g.player,first=g.actors[0],second=g.actors[1];a.x=5;a.y=3;a.dir=1;first.x=6;first.y=3;second.x=10;second.y=3;g.attack(a);g.update(.17);assert.equal(first.alive,false);
+ second.x=6;g.update(.02);assert.equal(second.alive,true);
+});
+test('expired hit window cannot damage an enemy even while the icon fades',()=>{
+ const g=arena(1,1),a=g.player,e=g.actors[0];a.x=5;a.y=3;a.dir=1;e.x=10;e.y=3;g.attack(a);for(let i=0;i<32;i++)g.update(.01);assert.ok(g.bites[0].done);e.x=6;g.update(.01);assert.equal(e.alive,true);
+});

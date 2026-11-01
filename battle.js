@@ -1,5 +1,5 @@
 export const DIRS=[[0,-1],[1,0],[0,1],[-1,0]];
-export const CONFIG={fuse:2,fire:.48,baseStep:16/60,biteCooldown:.9,roundTime:120};
+export const CONFIG={fuse:2,fire:.48,baseStep:16/60,biteCooldown:.9,biteLifetime:.5,biteActive:.12,roundTime:120};
 // Rendering follows the existing movement timer; collision and CPU keep grid positions.
 export function visualPosition(a){
  if(!a.motion||a.wait<=0)return {x:a.x,y:a.y};
@@ -19,9 +19,9 @@ export class Battle{
  move(a,d){if(!a.alive||a.wait>0||this.finished)return false;a.dir=d;const [dx,dy]=DIRS[d],x=a.x+dx,y=a.y+dy;if(this.map[y]?.[x]!==0||this.bombAt(x,y))return false;a.motion={x:a.x,y:a.y,duration:CONFIG.baseStep/(a.team?[1,1.5,2][a.level[0]-1]:1)};a.x=x;a.y=y;a.wait=a.motion.duration;this.pickup(a);return true;}
  pickup(a){const item=this.items.find(i=>i.x===a.x&&i.y===a.y);if(item){const ability=a.team?1-item.kind:item.kind;a.level[ability]=Math.min(3,a.level[ability]+1);this.items.splice(this.items.indexOf(item),1);this.events.push('pickup');}}
  attack(a){if(!a.alive||a.cool>0||this.finished)return false;if(!a.team){if(this.bombAt(a.x,a.y)||this.bombs.filter(b=>b.owner===a.id).length>=a.level[1])return false;this.bombs.push({x:a.x,y:a.y,t:2,level:a.level[0],owner:a.id,team:0});a.cool=.3;this.events.push('place');return true;}
- this.bites.push({x:a.x,y:a.y,dir:a.dir,reach:a.level[1],t:.16+.08*(a.level[1]-1),visible:.55,active:.24,actor:a.id,done:false});a.cool=CONFIG.biteCooldown+.08*(a.level[1]-1);this.events.push('bite');return true;}
+ this.bites.push({x:a.x,y:a.y,dir:a.dir,reach:a.level[1],t:.16+.08*(a.level[1]-1),visible:CONFIG.biteLifetime,active:CONFIG.biteActive,actor:a.id,done:false});a.cool=CONFIG.biteCooldown+.08*(a.level[1]-1);this.events.push('bite');return true;}
  biteCells(b){const a=this.actors.find(a=>a.id===b.actor);if(!a?.alive)return [];const cells=[[a.x,a.y]];const[dx,dy]=DIRS[b.dir];for(let i=1;i<=b.reach;i++){const x=a.x+dx*i,y=a.y+dy*i,v=this.map[y]?.[x];if(v===undefined||v===1||this.bombAt(x,y))break;cells.push([x,y]);if(v===2)break;}return cells;}
- resolveBite(b){const a=this.actors.find(a=>a.id===b.actor);if(!a?.alive)return;for(const[x,y]of this.biteCells(b)){if(this.map[y][x]===2){if(!b.chewed){const k=x+','+y;this.chew??={};this.chew[k]=(this.chew[k]||0)+1;if(this.chew[k]>=2)this.breakBlock(x,y);b.chewed=true;}break;}const enemies=this.actors.filter(e=>e.alive&&e.team!==a.team&&e.x===x&&e.y===y);if(enemies.length){for(const enemy of enemies)enemy.alive=false;this.events.push('out');break;}}}
+ resolveBite(b){const a=this.actors.find(a=>a.id===b.actor);if(!a?.alive)return;for(const[x,y]of this.biteCells(b)){if(this.map[y][x]===2){if(!b.chewed){const k=x+','+y;this.chew??={};this.chew[k]=(this.chew[k]||0)+1;if(this.chew[k]>=2)this.breakBlock(x,y);b.chewed=true;}break;}const enemies=this.actors.filter(e=>e.alive&&e.team!==a.team&&e.x===x&&e.y===y);if(enemies.length){for(const enemy of enemies)enemy.alive=false;this.events.push('out');b.done=true;break;}}}
  breakBlock(x,y){this.map[y][x]=0;if(this.random()<.72)this.items.push({x,y,kind:this.random()<.5?0:1});}
  explode(b){if(!this.bombs.includes(b))return;const cells=this.cells(b);this.bombs.splice(this.bombs.indexOf(b),1);this.fire.push({cells,t:CONFIG.fire,team:b.team});this.events.push('boom');for(const[x,y]of cells){if(this.map[y][x]===2)this.breakBlock(x,y);const other=this.bombAt(x,y);if(other)this.explode(other);}}
  stepTime(a){return CONFIG.baseStep/(a.team?[1,1.5,2][a.level[0]-1]:1)+.035;}
@@ -74,8 +74,8 @@ export class Battle{
    }}
   if(best){const[dx,dy]=DIRS[best.first];if(a.team&&this.map[a.y+dy]?.[a.x+dx]===2){a.dir=best.first;this.attack(a);}else this.move(a,best.first);}
  }
- update(dt,input={}){if(this.finished)return;this.time=Math.max(0,this.time-dt);for(const a of this.actors){a.wait=Math.max(0,a.wait-dt);a.cool=Math.max(0,a.cool-dt);if(!a.alive)continue;if(a.human){if(input.dir!==undefined)this.move(a,input.dir);if(input.attack)this.attack(a);}else{a.ai-=dt;if(a.ai<=0){this.cpu(a);a.ai=.035+this.random()*.025;}}}
- for(const b of [...this.bombs]){b.t-=dt;if(b.t<=0)this.explode(b);}for(const b of this.bites){b.t-=dt;b.visible-=dt;if(b.t<=0&&!b.done){this.resolveBite(b);b.active-=dt;if(b.active<=0)b.done=true;}}this.bites=this.bites.filter(b=>b.visible>0);
+ update(dt,input={}){if(this.finished)return;const attackPressed=!!input.attack&&!this.attackHeld;this.attackHeld=!!input.attack;this.time=Math.max(0,this.time-dt);for(const a of this.actors){a.wait=Math.max(0,a.wait-dt);a.cool=Math.max(0,a.cool-dt);if(!a.alive)continue;if(a.human){if(input.dir!==undefined)this.move(a,input.dir);if(a.team?attackPressed:input.attack)this.attack(a);}else{a.ai-=dt;if(a.ai<=0){this.cpu(a);a.ai=.035+this.random()*.025;}}}
+ for(const b of [...this.bombs]){b.t-=dt;if(b.t<=0)this.explode(b);}for(const b of this.bites){const previousWindup=b.t;b.t-=dt;b.visible-=dt;if(b.t<=0&&!b.done&&b.visible>0){this.resolveBite(b);b.active-=Math.max(0,dt-Math.max(0,previousWindup));if(b.active<=0)b.done=true;}}this.bites=this.bites.filter(b=>b.visible>0);
  for(const f of this.fire){for(const a of this.actors)if(a.alive&&f.cells.some(([x,y])=>a.x===x&&a.y===y)){a.alive=false;this.events.push('out');}f.t-=dt;}this.fire=this.fire.filter(f=>f.t>0);
  const counts=[0,1].map(t=>this.actors.filter(a=>a.alive&&a.team===t).length);if(counts.includes(0)||this.time<=0){this.finished=true;this.result=counts[0]===counts[1]?-1:counts[0]>counts[1]?0:1;}}
 }
