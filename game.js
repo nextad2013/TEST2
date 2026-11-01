@@ -140,7 +140,7 @@ function biteIcon(b,x,y,S){
 }
 const powerTypes=[{code:'SP',name:'スピード',color:'#328bb5',path:'M5 5h6v7l4 3h5v5H4v-7h3V5m0 11h4'}, {code:'AT',name:'攻撃',color:'#ba593d',path:'M12 8a7 7 0 1 0 0 14 7 7 0 0 0 0-14m3 0 2-4 4 1m-4-3 2-2'}, {code:'RG',name:'範囲',color:'#9654bc',path:'M3 12h18M12 3v18M3 12l4-4m-4 4 4 4m14-4-4-4m4 4-4 4M12 3l-4 4m4-4 4 4m-4 14-4-4m4 4 4-4'}];
 function renderPowers(p){
- const values=[speedMultiplier(p)+'倍',p.team?(attackCooldown(p)===0?'待ち時間なし':'待ち '+attackCooldown(p)+'秒'):p.level[POWER.AT]+'個',p.team?(p.level[POWER.RG]===1?'自分のみ':'正面'+(p.level[POWER.RG]-1)+'マス'):['3マス','6マス','全域'][p.level[POWER.RG]-1]];
+ const values=[speedMultiplier(p)+'倍',p.team?(attackCooldown(p)===0?'待ち時間なし':'待ち '+attackCooldown(p)+'秒'):p.level[POWER.AT]+'個',p.team?(p.level[POWER.RG]===1?'自分のみ':'正面'+(p.level[POWER.RG]-1)+'マス'):['2マス','5マス','MAX'][p.level[POWER.RG]-1]];
  const markup=powerTypes.map((power,i)=>`<div class="power-row" style="--power:${power.color}" aria-label="${power.code} ${power.name} レベル${p.level[i]} ${values[i]}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${i===POWER.AT&&p.team?'M20 6A9 9 0 1 0 20 18L12 12Z M9 7h.01':power.path}"/></svg><div class="power-info"><b>${power.code} <small>${power.name}</small></b><div class="power-steps">${[1,2,3].map(n=>`<span class="${n<=p.level[i]?'filled':''}">${n}</span>`).join('')}</div></div><strong>${values[i]}</strong></div>`).join('');
  if($('#powers').innerHTML!==markup)$('#powers').innerHTML=markup;
  const button=$('#attack'),cool=p.cool>0?Math.ceil(p.cool*10)/10:0;button.disabled=!playing||paused||game.finished||!p.alive||p.shield>0;button.innerHTML=`<span aria-hidden="true">${p.team?'◕':'✹'}</span><b>${cool?'待ち '+cool.toFixed(1)+'秒':'攻撃'}</b><small>0 KEY</small>`;

@@ -19,3 +19,5 @@ img.portrait-icon{width:100%;max-width:100px;height:auto;aspect-ratio:1;object-f
 @media(max-width:700px){.layout{display:flex}.teams{min-width:0}.team b{font-size:clamp(9px,2.5vw,12px)}aside .teams{grid-column:1/-1;grid-row:auto}.team{min-width:0}}
 
 .brand-akuma,header .brand-akuma{color:#ff394b}
+
+.team small{font-size:12px;font-weight:600;color:#d9dce7;line-height:1.5}

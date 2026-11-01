@@ -92,8 +92,8 @@ test('AT changes bomb capacity independently of RG and SP',()=>{
 test('pack AT cooldown is 2 then 1 then zero and max permits held repeats',()=>{
  for(const level of[1,2,3]){const g=arena(1,1),a=g.player;a.level[POWER.AT]=level;g.update(.01,{attack:true});assert.equal(a.cool,[2,1,0][level-1]);for(let i=0;i<250;i++)g.update(.01,{attack:true});const count=g.events.filter(e=>e==='bite').length;assert.equal(count>1,level===3);assert.ok(g.bites.length<=1);}
 });
-test('RG bomb rays are 3 then 6 then to edge and respect walls',()=>{
- for(const level of[1,2,3]){const g=arena(),b={x:1,y:3,level};g.map[3].fill(0);g.map[3][0]=g.map[3][15]=1;const cells=g.cells(b);assert.ok(cells.some(([x,y])=>x===[4,7,14][level-1]&&y===3));assert.ok(!cells.some(([x,y])=>y===3&&x>[4,7,14][level-1]));g.map[3][3]=1;assert.ok(!g.cells(b).some(([x,y])=>x>=3&&y===3));}
+test('RG bomb rays are 2 then 5 then to edge and respect walls',()=>{
+ for(const level of[1,2,3]){const g=arena(),b={x:1,y:3,level};g.map[3].fill(0);g.map[3][0]=g.map[3][15]=1;const cells=g.cells(b);assert.ok(cells.some(([x,y])=>x===[3,6,14][level-1]&&y===3));assert.ok(!cells.some(([x,y])=>y===3&&x>[3,6,14][level-1]));g.map[3][3]=1;assert.ok(!g.cells(b).some(([x,y])=>x>=3&&y===3));}
 });
 test('last defeat waits two seconds before result while ascending and freezes combat',()=>{
  const g=arena(1,1),a=g.player,e=g.actors[0];a.x=e.x=5;a.y=e.y=3;g.update(.01);assert.equal(g.finished,true);assert.equal(g.resultReady,false);assert.ok(e.death);const time=g.time;g.update(1);assert.equal(g.resultReady,false);assert.equal(e.death.elapsed,1);g.update(.99);assert.equal(g.resultReady,false);g.update(.02);assert.equal(g.resultReady,true);assert.equal(g.time,time);assert.equal(g.move(a,1),false);
