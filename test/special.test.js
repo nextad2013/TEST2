@@ -4,21 +4,22 @@ import {Battle} from '../battle.js';
 function arena(team=0){const g=new Battle(1,team,()=>.9);g.actors.forEach(a=>a.ai=999);g.player.x=5;g.player.y=3;g.player.dir=1;return g;}
 test('dash instantly travels two cells and destroys both breakable blocks',()=>{
  const g=arena(),a=g.player;g.map[3][6]=g.map[3][7]=2;
- assert.equal(g.special(a),true);assert.equal(a.x,7);assert.equal(a.y,3);assert.equal(a.motion,null);assert.equal(a.wait,0);assert.equal(a.specialLeft,2);assert.equal(a.glow,.5);
+ assert.equal(g.special(a),true);assert.equal(a.x,7);assert.equal(a.y,3);assert.equal(a.motion,null);assert.equal(a.wait,0);assert.equal(a.specialLeft,2);assert.equal(a.glow,.3);
  assert.equal(g.map[3][6],0);assert.equal(g.map[3][7],0);assert.equal(g.afterimages.length,2);assert.deepEqual(g.afterimages.map(i=>i.actor.x),[5,6]);
 });
-test('dash stops at hard walls and bombs and blocked attempts do not consume charges',()=>{
- for(const obstacle of['wall','bomb']){const g=arena(),a=g.player;if(obstacle==='wall')g.map[3][7]=1;else g.bombs.push({x:7,y:3,t:2,level:1,owner:0,team:0});
- assert.equal(g.special(a),true);assert.equal(a.x,6);assert.equal(a.specialLeft,2);assert.equal(g.special(a),false);assert.equal(a.specialLeft,2);}
+test('dash stops at hard walls and blocked attempts do not consume charges',()=>{
+ const g=arena(),a=g.player;g.map[3][7]=1;assert.equal(g.special(a),true);assert.equal(a.x,6);assert.equal(a.specialLeft,2);assert.equal(g.special(a),false);assert.equal(a.specialLeft,2);
+});
+test('only dash can cross bombs while ordinary walking is still blocked',()=>{
+ const g=arena(),a=g.player;g.bombs.push({x:6,y:3,t:2,level:1,owner:a.id,team:0},{x:7,y:3,t:2,level:1,owner:a.id,team:0});assert.equal(g.move(a,1),false);assert.equal(g.special(a),true);assert.equal(a.x,7);assert.equal(g.bombs.length,2);assert.equal(a.specialLeft,2);
 });
 test('special key triggers once per press and dash does not include a third ordinary step',()=>{
  const g=arena(),a=g.player;g.update(.01,{special:true,dir:1});assert.equal(a.x,7);assert.equal(a.specialLeft,2);
  for(let i=0;i<5;i++)g.update(.01,{special:true});assert.equal(a.specialLeft,2);
  g.update(.01,{special:false});g.update(.01,{special:true});assert.equal(a.x,9);assert.equal(a.specialLeft,1);
 });
-test('afterimages last 0.2 seconds and dash glow lasts half a second without granting invincibility',()=>{
- const g=arena(),a=g.player;g.special(a);g.update(.1);assert.ok(g.afterimages.length);g.update(.11);assert.equal(g.afterimages.length,0);assert.ok(a.glow>0);
- g.update(.28);assert.ok(a.glow>0);g.update(.02);assert.equal(a.glow,0);assert.equal(g.defeat(a),true);
+test('afterimages and dash glow both last 0.3 seconds without granting invincibility',()=>{
+ const g=arena(),a=g.player;g.special(a);g.update(.1);assert.ok(g.afterimages.length);g.update(.19);assert.ok(g.afterimages.length);assert.ok(a.glow>0);g.update(.02);assert.equal(g.afterimages.length,0);assert.equal(a.glow,0);assert.equal(g.defeat(a),true);
 });
 test('shield stops movement and attacks, cancels a pending bite and prevents blast damage for two seconds',()=>{
  const g=arena(1),a=g.player;g.attack(a);assert.ok(g.bites.length);assert.equal(g.special(a),true);assert.equal(a.specialLeft,2);assert.equal(a.shield,2);assert.equal(a.glow,2);assert.equal(g.bites.length,0);

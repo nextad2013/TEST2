@@ -1,5 +1,5 @@
 export const DIRS=[[0,-1],[1,0],[0,1],[-1,0]];
-export const CONFIG={fuse:2,fire:.48,baseStep:16/60,biteCooldown:2,biteLifetime:.5,biteActive:.12,roundTime:120};
+export const CONFIG={fuse:2,fire:.48,baseStep:16/60,biteCooldown:2,biteLifetime:.5,biteActive:.12,roundTime:60};
 // Rendering follows the existing movement timer; collision and CPU keep grid positions.
 export function visualPosition(a){
  if(!a.motion||a.wait<=0)return {x:a.x,y:a.y};
@@ -11,7 +11,7 @@ export function speedMultiplier(a){return [1,1.2,1.4][a.level[POWER.SP]-1];}
 export function attackCooldown(a){return a.team?[2,1,0][a.level[POWER.AT]-1]:.3;}
 export function bombRange(level){return [3,6,Infinity][level-1];}
 export class Battle{
- constructor(n=2,team=0,random=Math.random,specialStock={}){this.n=n;this.team=team;this.random=random;this.w=16;this.h=16;this.time=120;this.afterimages=[];this.bombs=[];this.fire=[];this.items=[];this.bites=[];this.actors=[];this.events=[];this.finished=false;this.endElapsed=0;this.result=null;this.map=Array.from({length:this.h},(_,y)=>Array.from({length:this.w},(_,x)=>x===0||y===0||x===this.w-1||y===this.h-1||(x%2===0&&y%2===0)?1:random()<.36?2:0));
+ constructor(n=2,team=0,random=Math.random,specialStock={}){this.n=n;this.team=team;this.random=random;this.w=16;this.h=16;this.time=CONFIG.roundTime;this.afterimages=[];this.bombs=[];this.fire=[];this.items=[];this.bites=[];this.actors=[];this.events=[];this.finished=false;this.endElapsed=0;this.result=null;this.escaped=false;this.map=Array.from({length:this.h},(_,y)=>Array.from({length:this.w},(_,x)=>x===0||y===0||x===this.w-1||y===this.h-1||(x%2===0&&y%2===0)?1:random()<.36?2:0));
  for(let t=0;t<2;t++)for(let i=0;i<n;i++){const x=t?this.w-2:1,y=1+i*2;this.actors.push({id:t*4+i,team:t,x,y,dir:t?3:1,alive:true,specialLeft:specialStock[t*4+i]??3,glow:0,shield:0,level:[1,1,1],wait:0,cool:0,ai:0,human:t===team&&i===0});for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(this.map[y+dy]?.[x+dx]===2)this.map[y+dy][x+dx]=0;}}
  // Fixed routes ensure no team is sealed off by random blocks.
  for(let x=1;x<this.w-1;x++)this.map[this.h-2][x]=0;
@@ -24,7 +24,7 @@ export class Battle{
  cells(b){const cells=[[b.x,b.y]];for(const [dx,dy]of DIRS){const len=Math.min(bombRange(b.level),dx?this.w:this.h);for(let i=1;i<=len;i++){const x=b.x+dx*i,y=b.y+dy*i,v=this.map[y]?.[x];if(v===undefined||v===1)break;cells.push([x,y]);if(v===2)break;}}return cells;}
  bombAt(x,y){return this.bombs.find(b=>b.x===x&&b.y===y)}
  move(a,d){if(!a.alive||a.shield>0||a.wait>0||this.finished)return false;a.dir=d;const [dx,dy]=DIRS[d],x=a.x+dx,y=a.y+dy;if(this.map[y]?.[x]!==0||this.bombAt(x,y))return false;a.motion={x:a.x,y:a.y,duration:CONFIG.baseStep/speedMultiplier(a)};a.x=x;a.y=y;a.wait=a.motion.duration;this.pickup(a);this.consumeContacts();return true;}
- dashPath(a){const[dx,dy]=DIRS[a.dir],path=[];for(let step=1;step<=2;step++){const x=a.x+dx*step,y=a.y+dy*step;if(this.map[y]?.[x]===undefined||this.map[y][x]===1||this.bombAt(x,y))break;path.push({x,y});}return path;}
+ dashPath(a){const[dx,dy]=DIRS[a.dir],path=[];for(let step=1;step<=2;step++){const x=a.x+dx*step,y=a.y+dy*step;if(this.map[y]?.[x]===undefined||this.map[y][x]===1)break;path.push({x,y});}return path;}
  special(a){
   if(!a.alive||this.finished||a.specialLeft<=0||a.shield>0)return false;
   if(a.team===1){
@@ -32,9 +32,9 @@ export class Battle{
    this.bites=this.bites.filter(b=>b.actor!==a.id||b.contact);this.events.push('shield');return true;
   }
   const path=this.dashPath(a);if(!path.length)return false;
-  a.specialLeft--;a.glow=.5;a.wait=0;a.motion=null;
+  a.specialLeft--;a.glow=.3;a.wait=0;a.motion=null;
   for(const cell of path){
-   this.afterimages.push({actor:{...a,motion:null,wait:0},t:.2});
+   this.afterimages.push({actor:{...a,motion:null,wait:0},t:.3});
    if(this.map[cell.y][cell.x]===2)this.breakBlock(cell.x,cell.y);
    a.x=cell.x;a.y=cell.y;this.pickup(a);this.consumeContacts();if(!a.alive)break;
   }
@@ -116,8 +116,8 @@ export class Battle{
    }}
   if(best){const[dx,dy]=DIRS[best.first];if(a.team&&this.map[a.y+dy]?.[a.x+dx]===2){a.dir=best.first;this.attack(a);}else this.move(a,best.first);}
  }
- update(dt,input={}){this.animateDeaths(dt);this.animateSpecials(dt);if(this.finished){this.endElapsed+=dt;for(const b of this.bites)b.visible-=dt;this.bites=this.bites.filter(b=>b.visible>0);for(const f of this.fire)f.t-=dt;this.fire=this.fire.filter(f=>f.t>0);return;}const specialPressed=!!input.special&&!this.specialHeld;this.specialHeld=!!input.special;const attackPressed=!!input.attack&&!this.attackHeld;this.attackHeld=!!input.attack;this.time=Math.max(0,this.time-dt);this.consumeContacts();for(const a of this.actors){a.wait=Math.max(0,a.wait-dt);a.cool=Math.max(0,a.cool-dt);if(!a.alive)continue;if(a.human){let usedSpecial=false;if(specialPressed){if(input.dir!==undefined&&a.shield<=0)a.dir=input.dir;usedSpecial=this.special(a);}if(!usedSpecial&&input.dir!==undefined)this.move(a,input.dir);if(a.team?(a.level[POWER.AT]===3?input.attack:attackPressed):input.attack)this.attack(a);}else{a.ai-=dt;if(a.ai<=0){this.cpu(a);a.ai=.035+this.random()*.025;}}}
+ update(dt,input={}){this.animateDeaths(dt);this.animateSpecials(dt);if(this.finished){this.endElapsed+=dt;for(const b of this.bites)b.visible-=dt;this.bites=this.bites.filter(b=>b.visible>0);for(const f of this.fire)f.t-=dt;this.fire=this.fire.filter(f=>f.t>0);return;}const specialPressed=!!input.special&&!this.specialHeld;this.specialHeld=!!input.special;const attackPressed=!!input.attack&&!this.attackHeld;this.attackHeld=!!input.attack;this.time=Math.max(0,this.time-dt);if(this.time<=0){this.finished=true;this.result=0;this.escaped=true;return;}this.consumeContacts();for(const a of this.actors){a.wait=Math.max(0,a.wait-dt);a.cool=Math.max(0,a.cool-dt);if(!a.alive)continue;if(a.human){let usedSpecial=false;if(specialPressed){if(input.dir!==undefined&&a.shield<=0)a.dir=input.dir;usedSpecial=this.special(a);}if(!usedSpecial&&input.dir!==undefined)this.move(a,input.dir);if(a.team?(a.level[POWER.AT]===3?input.attack:attackPressed):input.attack)this.attack(a);}else{a.ai-=dt;if(a.ai<=0){this.cpu(a);a.ai=.035+this.random()*.025;}}}
  for(const b of [...this.bombs]){b.t-=dt;if(b.t<=0)this.explode(b);}for(const b of this.bites){const previousWindup=b.t;b.t-=dt;b.visible-=dt;if(b.t<=0&&!b.done&&b.visible>0){this.resolveBite(b);b.active-=Math.max(0,dt-Math.max(0,previousWindup));if(b.active<=0)b.done=true;}}this.bites=this.bites.filter(b=>b.visible>0);
  for(const f of this.fire){for(const a of this.actors)if(a.alive&&f.cells.some(([x,y])=>a.x===x&&a.y===y)){this.defeat(a);}f.t-=dt;}this.fire=this.fire.filter(f=>f.t>0);
- const counts=[0,1].map(t=>this.actors.filter(a=>a.alive&&a.team===t).length);if(counts.includes(0)||this.time<=0){this.finished=true;this.result=counts[0]===counts[1]?-1:counts[0]>counts[1]?0:1;}}
+ const counts=[0,1].map(t=>this.actors.filter(a=>a.alive&&a.team===t).length);if(counts.includes(0)){this.finished=true;this.result=counts[0]===counts[1]?-1:counts[0]>counts[1]?0:1;}}
 }
