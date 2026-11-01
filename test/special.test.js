@@ -21,10 +21,10 @@ test('special key triggers once per press and dash does not include a third ordi
 test('afterimages and dash glow both last 0.3 seconds without granting invincibility',()=>{
  const g=arena(),a=g.player;g.special(a);g.update(.1);assert.ok(g.afterimages.length);g.update(.19);assert.ok(g.afterimages.length);assert.ok(a.glow>0);g.update(.02);assert.equal(g.afterimages.length,0);assert.equal(a.glow,0);assert.equal(g.defeat(a),true);
 });
-test('shield stops movement and attacks, cancels a pending bite and prevents blast damage for two seconds',()=>{
- const g=arena(1),a=g.player;g.attack(a);assert.ok(g.bites.length);assert.equal(g.special(a),true);assert.equal(a.specialLeft,2);assert.equal(a.shield,2);assert.equal(a.glow,2);assert.equal(g.bites.length,0);
+test('shield stops movement and attacks, cancels a pending bite and prevents blast damage for 1.5 seconds',()=>{
+ const g=arena(1),a=g.player;g.attack(a);assert.ok(g.bites.length);assert.equal(g.special(a),true);assert.equal(a.specialLeft,2);assert.equal(a.shield,1.5);assert.equal(a.glow,1.5);assert.equal(g.bites.length,0);
  assert.equal(g.move(a,1),false);a.cool=0;assert.equal(g.attack(a),false);assert.equal(g.defeat(a),false);assert.equal(g.special(a),false);assert.equal(a.specialLeft,2);
- g.fire.push({cells:[[a.x,a.y]],t:3,team:0});g.update(1.99);assert.equal(a.alive,true);assert.equal(a.x,5);assert.ok(a.shield>0);g.update(.02);assert.equal(a.shield,0);assert.equal(a.alive,false);
+ g.fire.push({cells:[[a.x,a.y]],t:3,team:0});g.update(1.49);assert.equal(a.alive,true);assert.equal(a.x,5);assert.ok(a.shield>0);g.update(.02);assert.equal(a.shield,0);assert.equal(a.alive,false);
 });
 test('three charges per actor are restored at the start of every new round',()=>{
  const g=arena(),a=g.player;
@@ -42,5 +42,5 @@ test('shield does not remove the established passive contact capture',()=>{
 });
 test('CPU uses shield when trapped in an imminent explosion',()=>{
  const g=arena(1),a=g.player;for(const[dx,dy]of[[0,-1],[1,0],[0,1],[-1,0]])g.map[a.y+dy][a.x+dx]=1;
- g.bombs.push({x:a.x,y:a.y,t:.2,level:1,owner:0,team:0});g.cpu(a);assert.equal(a.shield,2);assert.equal(a.specialLeft,2);g.update(.25);assert.equal(a.alive,true);
+ g.bombs.push({x:a.x,y:a.y,t:.2,level:1,owner:0,team:0});g.cpu(a);assert.equal(a.shield,1.5);assert.equal(a.specialLeft,2);g.update(.25);assert.equal(a.alive,true);
 });

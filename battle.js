@@ -1,5 +1,5 @@
 export const DIRS=[[0,-1],[1,0],[0,1],[-1,0]];
-export const CONFIG={fuse:1.6,kickStep:.12,fire:.48,baseStep:16/60,biteCooldown:2,biteLifetime:.5,biteActive:.12,roundTime:60};
+export const CONFIG={fuse:1.8,kickStep:.12,fire:.48,baseStep:16/60,biteCooldown:2,biteLifetime:.5,biteActive:.12,roundTime:60};
 // Rendering follows the existing movement timer; collision and CPU keep grid positions.
 export function visualPosition(a){
  if(!a.motion||a.wait<=0)return {x:a.x,y:a.y};
@@ -58,7 +58,7 @@ export class Battle{
  special(a){
   if(!a.alive||this.finished||a.specialLeft<=0||a.shield>0)return false;
   if(a.team===1){
-   a.specialLeft--;a.glow=2;a.shield=2;a.motion=null;a.wait=0;
+   a.specialLeft--;a.glow=1.5;a.shield=1.5;a.motion=null;a.wait=0;
    this.bites=this.bites.filter(b=>b.actor!==a.id||b.contact);this.events.push('shield');return true;
   }
   const path=this.dashPath(a);if(!path.length)return false;

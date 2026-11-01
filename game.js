@@ -146,12 +146,12 @@ function renderPowers(p){
  const button=$('#attack'),cool=p.cool>0?Math.ceil(p.cool*10)/10:0;button.disabled=!playing||paused||game.finished||!p.alive||p.shield>0;button.innerHTML=`<span aria-hidden="true">${p.team?'◕':'✹'}</span><b>${cool?'待ち '+cool.toFixed(1)+'秒':'攻撃'}</b><small>0 KEY</small>`;
  const name=p.team?'不死':'瞬速',symbol=p.team?'⬡':'⟫';
  for(const id of['#special','#touch-special']){const special=$(id);special.disabled=!playing||paused||game.finished||!p.alive||p.specialLeft<=0||p.shield>0;special.innerHTML=`<span aria-hidden="true">${symbol}</span><b>${name} ×${p.specialLeft}</b><small>${p.shield>0?'不死中 '+p.shield.toFixed(1)+'秒':'ENTER / 1ラウンド3回'}</small>`;special.setAttribute?.('aria-label',`${name} 残り${p.specialLeft}回 Enterキー`);}
- $('#special-note').textContent=p.team?'2秒静止して無敵。使用後2秒点滅。':'2マス移動・ブロック破壊・爆弾通過。発光・残像0.3秒。';
+ $('#special-note').textContent=p.team?'1.5秒静止して無敵。使用後1.5秒点滅。':'2マス移動・ブロック破壊・爆弾通過。発光・残像0.3秒。';
 
 }
 function drawActor(a,S){
  ctx.save();
- if(a.glow>0){const flashing=Math.floor(((a.team?2:.3)-a.glow)*10)%2===0;ctx.shadowColor=a.team?'#9cecff':'#ffe79d';ctx.shadowBlur=S*.3;ctx.filter=flashing?'brightness(1.8)':'brightness(1.15)';ctx.globalAlpha=flashing?1:.65;}
+ if(a.glow>0){const flashing=Math.floor(((a.team?1.5:.3)-a.glow)*10)%2===0;ctx.shadowColor=a.team?'#9cecff':'#ffe79d';ctx.shadowBlur=S*.3;ctx.filter=flashing?'brightness(1.8)':'brightness(1.15)';ctx.globalAlpha=flashing?1:.65;}
  if(a.shield>0){const x=(a.x+.5)*S,y=(a.y+.5)*S;ctx.fillStyle='#90e7ff30';ctx.strokeStyle='#9feeff';ctx.lineWidth=S*.045;ctx.beginPath();ctx.arc(x,y,S*.46,0,Math.PI*2);ctx.fill();ctx.stroke();}
  girl(a,S);ctx.restore();
 }
