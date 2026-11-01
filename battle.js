@@ -109,9 +109,10 @@ export class Battle{
   return hazards;
  }
  safeAt(hazards,x,y,start,end){return !(hazards.get(x+','+y)||[]).some(([lo,hi])=>start<=hi&&end>=lo);}
- escape(a,bombs=this.bombs,hazards=this.hazards(a,bombs)){
+ escape(a,bombs=this.bombs,hazards=this.hazards(a,bombs),initialDelay=0){
+  if(!this.safeAt(hazards,a.x,a.y,0,initialDelay))return null;
   const step=this.stepTime(a),queue=[{x:a.x,y:a.y,d:0,first:-1}],seen=new Set([a.x+','+a.y]);
-  for(let i=0;i<queue.length;i++){const p=queue[i],time=p.d*step;
+  for(let i=0;i<queue.length;i++){const p=queue[i],time=p.d*step+initialDelay;
    if(this.safeAt(hazards,p.x,p.y,time,6))return p;
    for(let d=0;d<4;d++){const[dx,dy]=DIRS[d],x=p.x+dx,y=p.y+dy,key=x+','+y;if(seen.has(key)||this.map[y]?.[x]!==0||bombs.some(b=>b.x===x&&b.y===y))continue;
     if(!this.safeAt(hazards,p.x,p.y,Math.max(0,time-step*.3),time+step*.4)||!this.safeAt(hazards,x,y,time+step*.4,time+step*1.5))continue;
@@ -120,8 +121,37 @@ export class Battle{
   }
   return null;
  }
+ kickAttackPlan(a,b,d,bombs=this.bombs){
+  const[dx,dy]=DIRS[d],x=b.x+dx,y=b.y+dy,step=this.stepTime(a);
+  if(b.t<step+.15||!this.canRollTo(b,x,y,bombs))return null;
+  const kicked={...b,x,y,rollDir:d,rollTimer:CONFIG.kickStep},planned=bombs.map(other=>other===b?kicked:other),projected=this.projectBomb(kicked,planned),blast=this.cells(projected);
+  const targets=this.actors.filter(e=>e.alive&&e.team!==a.team&&e.shield<b.t&&blast.some(([px,py])=>px===e.x&&py===e.y));if(!targets.length)return null;
+  const afterKick={...a,x:b.x,y:b.y},hazards=this.hazards(afterKick,planned);
+  if(!this.escape(afterKick,planned,hazards,step))return null;
+  const allies=this.actors.filter(e=>e.alive&&e.team===a.team&&e.id!==a.id);
+  if(!allies.every(ally=>this.escape(ally,planned,this.hazards(ally,planned),ally.wait)))return null;
+  return {direction:d,score:targets.length*10-projected.path.length*.05};
+ }
+ tryKickAttack(a){
+  let best=null;for(let d=0;d<4;d++){const[dx,dy]=DIRS[d],b=this.bombAt(a.x+dx,a.y+dy);if(!b)continue;const plan=this.kickAttackPlan(a,b,d);if(plan&&(!best||plan.score>best.score))best=plan;}
+  return best?this.move(a,best.direction):false;
+ }
+ trySetupKick(a){
+  if(a.cool>0||this.bombAt(a.x,a.y)||this.bombs.filter(b=>b.owner===a.id).length>=a.level[POWER.AT])return false;
+  let best=null;
+  for(let d=0;d<4;d++){
+   const[dx,dy]=DIRS[d],stand={...a,x:a.x-dx,y:a.y-dy};
+   if(this.map[stand.y]?.[stand.x]!==0||this.bombAt(stand.x,stand.y)||this.actors.some(e=>e.alive&&e.id!==a.id&&e.x===stand.x&&e.y===stand.y))continue;
+   const b={x:a.x,y:a.y,t:CONFIG.fuse-this.stepTime(a),level:a.level[POWER.RG],owner:a.id,team:0},bombs=[...this.bombs,b],plan=this.kickAttackPlan(stand,b,d,bombs);
+   if(!plan||!this.safeAt(this.hazards(a,bombs),stand.x,stand.y,0,this.stepTime(a)+.1))continue;
+   if(!best||plan.score>best.score)best=plan;
+  }
+  if(!best)return false;
+  if(!this.attack(a))return false;
+  return this.move(a,(best.direction+2)%4);
+ }
  cpu(a){
-  if(a.wait>0||!a.alive||a.shield>0)return;const hazards=this.hazards(a),step=this.stepTime(a);
+  if(a.wait>0||!a.alive||a.shield>0)return;if(a.team===0&&this.tryKickAttack(a))return;const hazards=this.hazards(a),step=this.stepTime(a);
   if(!this.safeAt(hazards,a.x,a.y,0,6)){
    if(a.specialLeft>0){
     if(a.team===0){const oldDir=a.dir;for(let d=0;d<4;d++){a.dir=d;const path=this.dashPath(a),last=path.at(-1);if(last&&this.safeAt(hazards,last.x,last.y,0,6)&&path.every(p=>!this.actors.some(e=>e.alive&&e.team!==a.team&&e.x===p.x&&e.y===p.y))){this.special(a);return;}}a.dir=oldDir;}
@@ -135,6 +165,7 @@ export class Battle{
   const enemies=this.actors.filter(e=>e.alive&&e.team!==a.team);if(!enemies.length)return;
   const distance=e=>Math.abs(e.x-a.x)+Math.abs(e.y-a.y),target=enemies.reduce((b,e)=>distance(e)<distance(b)?e:b);
   if(a.team===1&&a.cool<=0){for(let dir=0;dir<4;dir++){const bite={actor:a.id,dir,reach:a.level[POWER.RG]-1};if(this.biteCells(bite).some(([x,y])=>enemies.some(e=>e.x===x&&e.y===y))){a.dir=dir;this.attack(a);return;}}}
+  if(a.team===0&&this.trySetupKick(a))return;
   if(a.team===0&&a.cool<=0&&!this.bombAt(a.x,a.y)&&this.bombs.filter(b=>b.owner===a.id).length<a.level[1]){
    const bomb={x:a.x,y:a.y,t:CONFIG.fuse,level:a.level[POWER.RG],owner:a.id,team:0},blast=this.cells(bomb);
    const useful=blast.some(([x,y])=>this.map[y][x]===2||enemies.some(e=>e.x===x&&e.y===y));
