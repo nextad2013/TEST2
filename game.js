@@ -16,23 +16,19 @@ function headwear(a,S){
  const shape=(points,fill)=>{ctx.fillStyle=fill;ctx.strokeStyle='#f9e9d5';ctx.lineWidth=.018;ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.fill();ctx.stroke();};
  const circle=(x,y,r,fill)=>{ctx.fillStyle=fill;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();};
  if(a.team===0){
-  // A rounded bomb bonnet, with braided fuses tied like twin pigtails.
-  rect(-.28,-.40,.56,.19,color,.08);
-  ctx.strokeStyle='#f9e9d5';ctx.lineWidth=.02;ctx.strokeRect(-.23,-.37,.46,.10);
-  for(const side of[-1,1]){
-   ctx.beginPath();ctx.moveTo(side*.23,-.30);ctx.bezierCurveTo(side*.48,-.43,side*.31,-.02,side*.40,.08);ctx.strokeStyle='#211c2d';ctx.lineWidth=.10;ctx.stroke();ctx.strokeStyle='#e5be82';ctx.lineWidth=.06;ctx.stroke();
-   for(let n=0;n<3;n++){ctx.beginPath();ctx.moveTo(side*(.34+n*.012),-.21+n*.08);ctx.lineTo(side*(.39+n*.009),-.18+n*.08);ctx.strokeStyle='#8e603c';ctx.lineWidth=.024;ctx.stroke();}
-   shape([[side*.25,-.23],[side*.39,-.34],[side*.39,-.17]],color);
-   circle(side*.40,.09,.06,'#ffd370');circle(side*.40,.09,.027,'#ff725d');
-  }
+  // One bomb-shaped cap with a single thick fuse falling like a side braid.
+  ctx.fillStyle=color;ctx.strokeStyle='#f7ecd9';ctx.lineWidth=.025;ctx.beginPath();ctx.ellipse(0,-.28,.27,.18,0,Math.PI,Math.PI*2);ctx.lineTo(.27,-.22);ctx.lineTo(-.27,-.22);ctx.closePath();ctx.fill();ctx.stroke();
+  rect(.13,-.46,.11,.10,'#303344',.025);
+  ctx.beginPath();ctx.moveTo(.19,-.44);ctx.bezierCurveTo(.49,-.56,.39,-.16,.37,.04);ctx.strokeStyle='#282230';ctx.lineWidth=.12;ctx.stroke();ctx.strokeStyle='#f0c888';ctx.lineWidth=.075;ctx.stroke();
+  for(let n=0;n<4;n++){ctx.beginPath();ctx.moveTo(.37,-.32+n*.085);ctx.lineTo(.43,-.29+n*.085);ctx.strokeStyle='#9d6b3e';ctx.lineWidth=.023;ctx.stroke();}
+  circle(.37,.05,.061,'#ffba48');circle(.37,.05,.027,'#fff3b2');
  }else{
-  // A large bow made of two open-beak shapes, matching every pack girl.
-  rect(-.27,-.36,.54,.09,color,.04);
-  shape([[-.025,-.35],[-.32,-.58],[-.37,-.39],[-.18,-.39],[-.34,-.29]],color);
-  shape([[.025,-.35],[.32,-.58],[.37,-.39],[.18,-.39],[.34,-.29]],color);
-  shape([[-.08,-.33],[-.20,-.20],[-.08,-.22],[0,-.34]],color);
-  shape([[.08,-.33],[.20,-.20],[.08,-.22],[0,-.34]],color);
-  circle(0,-.36,.077,'#fff3d9');circle(0,-.36,.045,color);
+  // One bold circular, open-beak ribbon ornament: a readable arcade silhouette.
+  ctx.strokeStyle=color;ctx.lineWidth=.065;ctx.beginPath();ctx.arc(0,-.29,.25,Math.PI*1.05,Math.PI*1.95);ctx.stroke();
+  ctx.fillStyle='#ffe163';ctx.strokeStyle='#754b30';ctx.lineWidth=.025;ctx.beginPath();ctx.moveTo(.15,-.42);ctx.arc(.15,-.42,.205,Math.PI*.23,Math.PI*1.77);ctx.closePath();ctx.fill();ctx.stroke();
+  circle(.10,-.51,.024,'#282634');
+  shape([[-.025,-.29],[-.17,-.16],[-.055,-.19],[.06,-.32]],color);
+  circle(.05,-.30,.045,color);
  }
  ctx.restore();
 }
@@ -41,7 +37,7 @@ function render(){const S=canvas.width/game.w;canvas.height=game.h*S;ctx.clearRe
  for(const b of game.bombs)if(b.t<.65)for(const[x,y]of game.cells(b))rect(x*S+3,y*S+3,S-6,S-6,`rgba(255,100,124,${.12+Math.sin(performance.now()/70)*.08})`);
  for(const i of game.items){const x=i.x*S,y=i.y*S;rect(x+S*.12,y+S*.12,S*.76,S*.76,'#fff2da',7);rect(x+S*.16,y+S*.16,S*.68,S*.68,i.kind?'#925a34':'#9853d6',5);text('UP',x+S*.5,y+S*.59,S*.30,'#ffffff');text(i.kind?'Ⅱ':'Ⅰ',x+S*.5,y+S*.79,S*.13,'#fff2da');}
  for(const b of game.bombs){const x=(b.x+.5)*S,y=(b.y+.55)*S;ctx.fillStyle=b.t<.55&&Math.sin(performance.now()/55)>0?'#ff6582':'#111728';ctx.beginPath();ctx.arc(x,y,S*.27,0,7);ctx.fill();text('✧',x-S*.07,y,S*.25,'#b6c0dd');text('✹',x+S*.15,y-S*.25,S*.25,'#ffce72');}
- for(const b of game.bites){const[dx,dy]=DIRS[b.dir];for(let i=1;i<=b.reach;i++){if(game.map[b.y+dy*i]?.[b.x+dx*i]===1)break;rect((b.x+dx*i)*S+5,(b.y+dy*i)*S+5,S-10,S-10,b.done?'#ffe49eaa':'#ffe49e33');if(game.bombAt(b.x+dx*i,b.y+dy*i)||game.map[b.y+dy*i]?.[b.x+dx*i]===2)break;}}
+ for(const b of game.bites){for(const[x,y]of game.biteCells(b))rect(x*S+5,y*S+5,S-10,S-10,b.t<=0&&!b.done?'#ffe49eaa':'#ffe49e33');}
  for(const a of game.actors)girl(a,S);
  for(const f of game.fire)for(const[x,y]of f.cells){rect(x*S+2,y*S+2,S-4,S-4,'#ff9c58cc',6);text('✦',(x+.5)*S,(y+.74)*S,S*.68,'#fff3af');}
  $('#left').textContent=`${scores[0]} · ${game.actors.filter(a=>a.team===0&&a.alive).length}人`;$('#right').textContent=`${scores[1]} · ${game.actors.filter(a=>a.team===1&&a.alive).length}人`;$('#time').textContent=Math.ceil(game.time);$('#round').textContent=`ROUND ${String(round).padStart(2,'0')}`;const p=game.player,dots=n=>'●'.repeat(n)+'○'.repeat(3-n);$('#powers').textContent=p.team?`速度 ${dots(p.level[0])}  ${[1,1.5,2][p.level[0]-1]}倍\n捕食 ${dots(p.level[1])}  ${p.level[1]}マス`:`爆風 ${dots(p.level[0])}  ${['1/3','2/3','MAX'][p.level[0]-1]}\n設置 ${dots(p.level[1])}  ${p.level[1]}個`;$('#status').textContent=paused?'● PAUSED':!playing?'● READY TO PLAY':p.alive?'● BATTLE IN PROGRESS':'● 退場 — CPUの対戦を観戦中';}
