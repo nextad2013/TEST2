@@ -16,10 +16,18 @@ window.addEventListener('keydown',e=>{
 });
 window.addEventListener('keyup',e=>keys.delete(e.code));
 window.addEventListener('blur',()=>{keys.clear();specialQueued=false;releaseStick();if(playing&&!paused)pause();});
-const joystick=$('#joystick'),stickThumb=$('#stick-thumb');let stickPointer=null;
-function releaseStick(){stickPointer=null;touchDirs=[];stickThumb.style.transform='translate(0,0)';joystick.removeAttribute?.('data-direction');}
-function updateStick(e){const box=joystick.getBoundingClientRect(),dx=e.clientX-(box.left+box.width/2),dy=e.clientY-(box.top+box.height/2);touchDirs=directionsFromStick(dx,dy,box.width*.20);const distance=Math.hypot(dx,dy),scale=distance?Math.min(1,box.width*.23/distance):0;stickThumb.style.transform=`translate(${dx*scale}px,${dy*scale}px)`;joystick.setAttribute?.('data-direction',touchDirs.length?touchDirs.map(d=>['up','right','down','left'][d]).join('-'):'center');}
-joystick.onpointerdown=e=>{e.preventDefault();if(stickPointer!==null)return;stickPointer=e.pointerId;try{joystick.setPointerCapture(e.pointerId);}catch{}updateStick(e);};
+const joystick=$('#joystick'),stickThumb=$('#stick-thumb'),moveArea=$('#move-area');let stickPointer=null,stickOrigin=null;
+function releaseStick(){stickPointer=null;stickOrigin=null;touchDirs=[];joystick.style.transform='translate(0,0)';stickThumb.style.transform='translate(0,0)';joystick.removeAttribute?.('data-direction');}
+function updateStick(e){if(!stickOrigin)return;const box={width:stickOrigin.size},dx=e.clientX-stickOrigin.x,dy=e.clientY-stickOrigin.y;touchDirs=directionsFromStick(dx,dy,box.width*.20);const distance=Math.hypot(dx,dy),scale=distance?Math.min(1,box.width*.23/distance):0;stickThumb.style.transform=`translate(${dx*scale}px,${dy*scale}px)`;joystick.setAttribute?.('data-direction',touchDirs.length?touchDirs.map(d=>['up','right','down','left'][d]).join('-'):'center');}
+function beginStick(e){
+ e.preventDefault();if(stickPointer!==null)return;
+ const box=joystick.getBoundingClientRect(),area=moveArea.getBoundingClientRect(),radius=box.width/2;
+ stickPointer=e.pointerId;stickOrigin={x:e.clientX,y:e.clientY,size:box.width};
+ const centerX=Math.max(area.left+radius,Math.min(area.left+area.width-radius,e.clientX)),centerY=Math.max(area.top+radius,Math.min(area.top+area.height-radius,e.clientY));
+ joystick.style.transform=`translate(${centerX-(box.left+box.width/2)}px,${centerY-(box.top+box.height/2)}px)`;
+ try{joystick.setPointerCapture(e.pointerId);}catch{}updateStick(e);
+}
+joystick.onpointerdown=moveArea.onpointerdown=beginStick;
 joystick.onpointermove=e=>{if(e.pointerId===stickPointer){e.preventDefault();updateStick(e);}};
 joystick.onpointerup=joystick.onpointercancel=e=>{if(e.pointerId===stickPointer)releaseStick();};
 // Keep following the initiating finger beyond the circular pad, even if capture is lost.

@@ -49,3 +49,9 @@ body{font-size:16px}header{height:auto;min-height:78px;flex-wrap:wrap;padding-to
 }
 
 .intro h1>span>i{font-style:italic}
+
+/* The same drawn circles avoid font-dependent win markers on phones as well. */
+.wins .wins-text{display:none}.wins .wins-dots{display:flex;align-items:center;justify-content:center;gap:8px}.wins .win-dot{display:block;flex:none;width:20px;height:20px;border:3px solid currentColor;border-radius:50%;background:transparent;box-sizing:border-box}.wins .win-dot.is-won{background:currentColor}.wins{text-shadow:none;letter-spacing:0}
+.move-area{position:relative;flex:1;min-width:112px;min-height:140px;display:flex;align-items:center;justify-content:flex-start;padding-left:10px;touch-action:none;user-select:none}
+@media(max-width:700px),(pointer:coarse){.touch{gap:12px;padding-left:max(18px,env(safe-area-inset-left));padding-right:max(10px,env(safe-area-inset-right))}.touch .joystick{width:104px;height:104px;flex:none}.touch .action-buttons{flex:none}.move-area:active{background:radial-gradient(ellipse,#91b7db0c,transparent 70%)}body{padding-bottom:175px}}
+@media(max-width:380px){.touch{gap:8px;padding-left:8px;padding-right:8px}.move-area{min-width:112px}.touch .joystick{width:100px;height:100px}}
