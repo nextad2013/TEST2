@@ -18,6 +18,8 @@ img.portrait-icon{width:100%;max-width:100px;height:auto;aspect-ratio:1;object-f
 @media(min-width:701px) and (max-width:1000px){.layout{grid-template-columns:minmax(0,1fr) 270px}.team b{font-size:10px}}
 @media(max-width:700px){.layout{display:flex}.teams{min-width:0}.team b{font-size:clamp(9px,2.5vw,12px)}aside .teams{grid-column:1/-1;grid-row:auto}.team{min-width:0}}
 
-.brand-akuma,header .brand-akuma{color:#ff394b}
+
 
 .team small{font-size:12px;font-weight:600;color:#d9dce7;line-height:1.5}
+
+.wordmark,header .wordmark,footer .wordmark{display:inline-flex;align-items:center;white-space:nowrap;font-weight:900;letter-spacing:.06em;line-height:1;color:inherit;vertical-align:middle}.wordmark span,header .wordmark span,footer .wordmark span{display:inline;color:inherit}.wordmark .wordmark-red,header .wordmark .wordmark-red,footer .wordmark .wordmark-red{display:inline-flex;align-items:center;color:#ff394b}.wordmark-a{display:block;flex:none;width:1.52em;height:1.14em;overflow:visible;margin-right:.03em}.wordmark-a path{fill:none;stroke:currentColor;stroke-width:3.6;stroke-linecap:square;stroke-linejoin:miter}
