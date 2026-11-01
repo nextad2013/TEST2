@@ -6,6 +6,7 @@ export function visualPosition(a){
  const progress=Math.max(0,Math.min(1,1-a.wait/a.motion.duration));
  return {x:a.motion.x+(a.x-a.motion.x)*progress,y:a.motion.y+(a.y-a.motion.y)*progress};
 }
+export function speedMultiplier(a){return a.team?[1,1.5,2][a.level[0]-1]:[1,1.3,1.6][a.level[1]-1];}
 export class Battle{
  constructor(n=2,team=0,random=Math.random){this.n=n;this.team=team;this.random=random;this.w=16;this.h=16;this.time=120;this.bombs=[];this.fire=[];this.items=[];this.bites=[];this.actors=[];this.events=[];this.finished=false;this.result=null;this.map=Array.from({length:this.h},(_,y)=>Array.from({length:this.w},(_,x)=>x===0||y===0||x===this.w-1||y===this.h-1||(x%2===0&&y%2===0)?1:random()<.36?2:0));
  for(let t=0;t<2;t++)for(let i=0;i<n;i++){const x=t?this.w-2:1,y=1+i*2;this.actors.push({id:t*4+i,team:t,x,y,dir:t?3:1,alive:true,level:[1,1],wait:0,cool:0,ai:0,human:t===team&&i===0});for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(this.map[y+dy]?.[x+dx]===2)this.map[y+dy][x+dx]=0;}}
@@ -16,7 +17,7 @@ export class Battle{
  get player(){return this.actors.find(a=>a.human)}
  cells(b){const cells=[[b.x,b.y]];for(const [dx,dy]of DIRS){const len=Math.max(1,Math.floor(((dx?this.w:this.h)*b.level/3-1)/2));for(let i=1;i<=len;i++){const x=b.x+dx*i,y=b.y+dy*i,v=this.map[y]?.[x];if(v===undefined||v===1)break;cells.push([x,y]);if(v===2)break;}}return cells;}
  bombAt(x,y){return this.bombs.find(b=>b.x===x&&b.y===y)}
- move(a,d){if(!a.alive||a.wait>0||this.finished)return false;a.dir=d;const [dx,dy]=DIRS[d],x=a.x+dx,y=a.y+dy;if(this.map[y]?.[x]!==0||this.bombAt(x,y))return false;a.motion={x:a.x,y:a.y,duration:CONFIG.baseStep/(a.team?[1,1.5,2][a.level[0]-1]:1)};a.x=x;a.y=y;a.wait=a.motion.duration;this.pickup(a);return true;}
+ move(a,d){if(!a.alive||a.wait>0||this.finished)return false;a.dir=d;const [dx,dy]=DIRS[d],x=a.x+dx,y=a.y+dy;if(this.map[y]?.[x]!==0||this.bombAt(x,y))return false;a.motion={x:a.x,y:a.y,duration:CONFIG.baseStep/speedMultiplier(a)};a.x=x;a.y=y;a.wait=a.motion.duration;this.pickup(a);return true;}
  pickup(a){const item=this.items.find(i=>i.x===a.x&&i.y===a.y);if(item){const ability=a.team?1-item.kind:item.kind;a.level[ability]=Math.min(3,a.level[ability]+1);this.items.splice(this.items.indexOf(item),1);this.events.push('pickup');}}
  attack(a){if(!a.alive||a.cool>0||this.finished)return false;if(!a.team){if(this.bombAt(a.x,a.y)||this.bombs.filter(b=>b.owner===a.id).length>=a.level[1])return false;this.bombs.push({x:a.x,y:a.y,t:2,level:a.level[0],owner:a.id,team:0});a.cool=.3;this.events.push('place');return true;}
  this.bites.push({x:a.x,y:a.y,dir:a.dir,reach:a.level[1]-1,t:.16+.08*(a.level[1]-1),visible:CONFIG.biteLifetime,active:CONFIG.biteActive,actor:a.id,done:false});a.cool=CONFIG.biteCooldown+.08*(a.level[1]-1);this.events.push('bite');return true;}
@@ -24,7 +25,7 @@ export class Battle{
  resolveBite(b){const a=this.actors.find(a=>a.id===b.actor);if(!a?.alive)return;if(b.reach===0&&!b.chewed){const[dx,dy]=DIRS[b.dir],x=a.x+dx,y=a.y+dy;if(this.map[y]?.[x]===2){const k=x+','+y;this.chew??={};this.chew[k]=(this.chew[k]||0)+1;if(this.chew[k]>=2)this.breakBlock(x,y);b.chewed=true;}}for(const[x,y]of this.biteCells(b)){if(this.map[y][x]===2){if(!b.chewed){const k=x+','+y;this.chew??={};this.chew[k]=(this.chew[k]||0)+1;if(this.chew[k]>=2)this.breakBlock(x,y);b.chewed=true;}break;}const enemies=this.actors.filter(e=>e.alive&&e.team!==a.team&&e.x===x&&e.y===y);if(enemies.length){for(const enemy of enemies)enemy.alive=false;this.events.push('out');b.done=true;break;}}}
  breakBlock(x,y){this.map[y][x]=0;if(this.random()<.72)this.items.push({x,y,kind:this.random()<.5?0:1});}
  explode(b){if(!this.bombs.includes(b))return;const cells=this.cells(b);this.bombs.splice(this.bombs.indexOf(b),1);this.fire.push({cells,t:CONFIG.fire,team:b.team});this.events.push('boom');for(const[x,y]of cells){if(this.map[y][x]===2)this.breakBlock(x,y);const other=this.bombAt(x,y);if(other)this.explode(other);}}
- stepTime(a){return CONFIG.baseStep/(a.team?[1,1.5,2][a.level[0]-1]:1)+.035;}
+ stepTime(a){return CONFIG.baseStep/speedMultiplier(a)+.035;}
  hazards(a,bombs=this.bombs){
   const hazards=new Map(),add=(x,y,start,end)=>{const k=x+','+y;if(!hazards.has(k))hazards.set(k,[]);hazards.get(k).push([start,end]);};
   const times=bombs.map(b=>Math.max(0,b.t)),cells=bombs.map(b=>this.cells(b));

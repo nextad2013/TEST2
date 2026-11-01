@@ -1,4 +1,4 @@
-import test from 'node:test';import assert from 'node:assert/strict';import{Battle,CONFIG,visualPosition}from'../battle.js';
+import test from 'node:test';import assert from 'node:assert/strict';import{Battle,CONFIG,visualPosition,speedMultiplier}from'../battle.js';
 function arena(n=1,t=0){const g=new Battle(n,t,()=>.9);g.actors.forEach(a=>a.ai=999);return g;}
 test('every team size and side has one human and valid spawns',()=>{for(let n=1;n<=4;n++)for(let t=0;t<2;t++){const g=arena(n,t);assert.equal(g.actors.length,n*2);assert.equal(g.actors.filter(a=>a.human).length,1);for(const a of g.actors)assert.equal(g.map[a.y][a.x],0);}});
 test('bomb capacity, wall blocking, chain reaction and self damage',()=>{const g=arena(),a=g.player;a.x=5;a.y=3;a.level=[3,3];assert.ok(g.attack(a));a.x=7;a.cool=0;assert.ok(g.attack(a));g.bombs[0].t=.01;g.map[3][9]=1;g.actors[1].x=8;g.actors[1].y=3;g.update(.02);assert.equal(g.bombs.length,0);assert.equal(a.alive,false);assert.equal(g.actors[1].alive,false);assert.ok(!g.fire.some(f=>f.cells.some(([x,y])=>x===10&&y===3)));});
@@ -63,4 +63,15 @@ test('pack reach is own cell plus exactly zero, one, or two forward cells',()=>{
 test('base pack can still chew blocks without hitting adjacent enemies',()=>{
  const g=arena(1,1),a=g.player;a.x=5;a.y=3;a.dir=1;g.map[3][6]=2;
  for(let i=0;i<2;i++){a.cool=0;g.attack(a);g.update(.17);}assert.equal(g.map[3][6],0);
+});
+
+test('bomber brown UP caps movement at 1.3 and 1.6 with bomb capacity retained',()=>{
+ const g=arena(),a=g.player;a.x=5;a.y=3;
+ for(let level=1;level<=3;level++){
+  if(level>1){g.items.push({x:a.x,y:a.y,kind:1});g.pickup(a);}
+  assert.equal(a.level[1],level);assert.equal(speedMultiplier(a),[1,1.3,1.6][level-1]);
+  a.wait=0;assert.equal(g.move(a,level%2?1:3),true);assert.ok(Math.abs(a.wait-CONFIG.baseStep/[1,1.3,1.6][level-1])<1e-9);
+  assert.ok(Math.abs(g.stepTime(a)-(a.wait+.035))<1e-9);
+ }
+ g.items.push({x:a.x,y:a.y,kind:1});g.pickup(a);assert.equal(speedMultiplier(a),1.6);
 });
