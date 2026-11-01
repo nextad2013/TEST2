@@ -17,3 +17,5 @@ img.portrait-icon{width:100%;max-width:100px;height:auto;aspect-ratio:1;object-f
 .layout{grid-template-columns:minmax(0,1fr) 300px}.team b{white-space:nowrap;font-size:11px}.team small{white-space:nowrap}
 @media(min-width:701px) and (max-width:1000px){.layout{grid-template-columns:minmax(0,1fr) 270px}.team b{font-size:10px}}
 @media(max-width:700px){.layout{display:flex}.teams{min-width:0}.team b{font-size:clamp(9px,2.5vw,12px)}aside .teams{grid-column:1/-1;grid-row:auto}.team{min-width:0}}
+
+.brand-akuma,header .brand-akuma{color:#ff394b}
