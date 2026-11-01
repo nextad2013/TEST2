@@ -19,9 +19,13 @@ window.addEventListener('blur',()=>{keys.clear();specialQueued=false;releaseStic
 const joystick=$('#joystick'),stickThumb=$('#stick-thumb');let stickPointer=null;
 function releaseStick(){stickPointer=null;touchDirs=[];stickThumb.style.transform='translate(0,0)';joystick.removeAttribute?.('data-direction');}
 function updateStick(e){const box=joystick.getBoundingClientRect(),dx=e.clientX-(box.left+box.width/2),dy=e.clientY-(box.top+box.height/2);touchDirs=directionsFromStick(dx,dy,box.width*.20);const distance=Math.hypot(dx,dy),scale=distance?Math.min(1,box.width*.23/distance):0;stickThumb.style.transform=`translate(${dx*scale}px,${dy*scale}px)`;joystick.setAttribute?.('data-direction',touchDirs.length?touchDirs.map(d=>['up','right','down','left'][d]).join('-'):'center');}
-joystick.onpointerdown=e=>{e.preventDefault();if(stickPointer!==null)return;stickPointer=e.pointerId;joystick.setPointerCapture(e.pointerId);updateStick(e);};
+joystick.onpointerdown=e=>{e.preventDefault();if(stickPointer!==null)return;stickPointer=e.pointerId;try{joystick.setPointerCapture(e.pointerId);}catch{}updateStick(e);};
 joystick.onpointermove=e=>{if(e.pointerId===stickPointer){e.preventDefault();updateStick(e);}};
-joystick.onpointerup=joystick.onpointercancel=joystick.onlostpointercapture=e=>{if(e.pointerId===stickPointer)releaseStick();};
+joystick.onpointerup=joystick.onpointercancel=e=>{if(e.pointerId===stickPointer)releaseStick();};
+// Keep following the initiating finger beyond the circular pad, even if capture is lost.
+joystick.onlostpointercapture=e=>{if(e.pointerId===stickPointer){try{joystick.setPointerCapture(e.pointerId);}catch{}}};
+window.addEventListener('pointermove',e=>{if(e.pointerId===stickPointer&&e.target!==joystick){e.preventDefault();updateStick(e);}},{passive:false});
+for(const event of['pointerup','pointercancel'])window.addEventListener(event,e=>{if(e.pointerId===stickPointer)releaseStick();});
 $('#attack').onpointerdown=e=>{e.preventDefault();e.currentTarget.setPointerCapture(e.pointerId);keys.add('Digit0');};$('#attack').onpointerup=$('#attack').onpointercancel=()=>keys.delete('Digit0');
 $('#mute').onclick=()=>{muted=!muted;$('#mute').textContent=muted?'音 OFF':'音 ON';if(!muted){audio??=new(window.AudioContext||window.webkitAudioContext)();audio.resume();}};
 for(const id of['#special','#touch-special']){

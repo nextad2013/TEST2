@@ -43,3 +43,7 @@ body{font-size:16px}header{height:auto;min-height:78px;flex-wrap:wrap;padding-to
 @media(hover:hover) and (pointer:fine){
  .wins .wins-text{display:none}.wins .wins-dots{display:flex;align-items:center;justify-content:center;gap:8px}.wins .win-dot{display:block;flex:none;width:20px;height:20px;border:3px solid currentColor;border-radius:50%;background:transparent;box-sizing:border-box}.wins .win-dot.is-won{background:currentColor}.wins{text-shadow:none;letter-spacing:0}
 }
+
+@media(min-width:701px) and (hover:hover) and (pointer:fine){
+ .intro{gap:24px}.intro h1{display:flex;align-items:baseline;gap:18px;flex-wrap:nowrap;line-height:1.2}.intro h1>span{display:inline-block;margin-top:0;font-size:18px;line-height:1.2;white-space:nowrap}
+}
