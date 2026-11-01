@@ -16,16 +16,7 @@ function headwear(a,S){
  const shape=(points,fill)=>{ctx.fillStyle=fill;ctx.strokeStyle='#f9e9d5';ctx.lineWidth=.018;ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.fill();ctx.stroke();};
  const circle=(x,y,r,fill)=>{ctx.fillStyle=fill;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();};
  // Keep every accessory seated inside the hairline, overlapping the bangs.
- if(a.team===0){
-  ctx.fillStyle='#292536';ctx.beginPath();ctx.ellipse(0,-.22,.265,.13,0,Math.PI,Math.PI*2);ctx.lineTo(.265,-.13);ctx.quadraticCurveTo(0,-.19,-.265,-.13);ctx.closePath();ctx.fill();
-  ctx.fillStyle=color;ctx.strokeStyle='#fff0df';ctx.lineWidth=.018;ctx.beginPath();ctx.moveTo(-.25,-.17);ctx.bezierCurveTo(-.27,-.41,.26,-.41,.25,-.17);ctx.quadraticCurveTo(.12,-.20,0,-.18);ctx.quadraticCurveTo(-.12,-.20,-.25,-.17);ctx.closePath();ctx.fill();ctx.stroke();
-  ctx.beginPath();ctx.moveTo(-.18,-.27);ctx.quadraticCurveTo(-.10,-.34,-.015,-.31);ctx.strokeStyle='#ffffff88';ctx.lineWidth=.025;ctx.stroke();
-  rect(.14,-.34,.085,.065,'#383044',.02);
-  // A single side fuse, hugging the cheek like a soft side braid.
-  ctx.beginPath();ctx.moveTo(.18,-.31);ctx.bezierCurveTo(.35,-.37,.32,-.12,.32,.075);ctx.strokeStyle='#302636';ctx.lineWidth=.095;ctx.stroke();ctx.strokeStyle='#f5d4a1';ctx.lineWidth=.062;ctx.stroke();
-  for(let n=0;n<3;n++){ctx.beginPath();ctx.moveTo(.29,-.17+n*.078);ctx.lineTo(.35,-.14+n*.078);ctx.strokeStyle='#a8774f';ctx.lineWidth=.018;ctx.stroke();}
-  shape([[.29,.055],[.23,.025],[.24,.115],[.30,.085]],color);circle(.32,.09,.043,'#ffcf75');circle(.32,.09,.020,'#fff7d3');
- }else{
+ if(a.team===1){
   // A cloth headband follows the skull; the single beak bow is sewn onto it.
   ctx.strokeStyle='#fff0dc';ctx.lineWidth=.085;ctx.beginPath();ctx.moveTo(-.24,-.17);ctx.quadraticCurveTo(0,-.38,.24,-.17);ctx.stroke();
   ctx.strokeStyle=color;ctx.lineWidth=.05;ctx.beginPath();ctx.moveTo(-.24,-.17);ctx.quadraticCurveTo(0,-.38,.24,-.17);ctx.stroke();
@@ -38,7 +29,46 @@ function headwear(a,S){
  }
  ctx.restore();
 }
+// Separate drawing path keeps the approved Pack Girl artwork unchanged.
+function bombGirl(a,S){
+ const accent=characterColors[a.id],hair='#3b294b',edge='#211a30';
+ ctx.save();ctx.translate((a.x+.5)*S,(a.y+.5)*S);if(!a.alive)ctx.globalAlpha=.18;
+ if(a.human){ctx.strokeStyle='#a8f4e0';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,S*.46,0,7);ctx.stroke();}
+ const shape=(points,fill,stroke)=>{ctx.fillStyle=fill;ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x*S,y*S):ctx.moveTo(x*S,y*S));ctx.closePath();ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=S*.014;ctx.stroke();}};
+ const oval=(x,y,rx,ry,fill)=>{ctx.fillStyle=fill;ctx.beginPath();ctx.ellipse(x*S,y*S,rx*S,ry*S,0,0,Math.PI*2);ctx.fill();};
+ // Dark purple hair, gathered low at the nape rather than a hat or pigtail.
+ oval(.20,.12,.105,.13,'#30233f');oval(0,-.09,.285,.30,hair);
+ shape([[-.26,-.08],[-.27,.15],[-.16,.20],[-.15,.01]],hair);
+ shape([[.24,-.10],[.26,.14],[.16,.18],[.15,-.015]],hair);
+ // White sleeveless blouse with the identifying color on the waist and arm bands.
+ shape([[-.11,.13],[-.21,.20],[-.19,.34],[.19,.34],[.21,.20],[.11,.13]],'#fff4e8',edge);
+ shape([[-.21,.20],[-.255,.31],[-.21,.33],[-.16,.22]],'#f9d4c7');
+ shape([[.21,.20],[.255,.31],[.21,.33],[.16,.22]],'#f9d4c7');
+ rect(-S*.245,S*.235,S*.065,S*.045,accent,S*.01);rect(S*.18,S*.235,S*.065,S*.045,accent,S*.01);
+ rect(-S*.19,S*.30,S*.38,S*.055,accent,S*.015);
+ shape([[-.10,.15],[0,.24],[-.055,.27],[-.16,.19]],'#fffefa',edge);
+ shape([[.10,.15],[0,.24],[.055,.27],[.16,.19]],'#fffefa',edge);
+ shape([[0,.205],[-.035,.25],[-.018,.325],[.018,.325],[.035,.25]],'#292330');
+ oval(0,-.025,.216,.224,'#ffe0d2');
+ // Narrow black choker and its silver pin, drawn below the chin.
+ rect(-S*.09,S*.155,S*.18,S*.035,'#211e29',S*.008);
+ ctx.strokeStyle='#e1dce8';ctx.lineWidth=S*.012;ctx.beginPath();ctx.arc(0,S*.179,S*.021,0,Math.PI*2);ctx.stroke();
+ // Green eyes, soft lids and small highlights.
+ for(const k of[-1,1]){
+  oval(k*.088,.014,.047,.060,'#302536');oval(k*.088,.032,.032,.040,'#6ea98a');oval(k*.088,.032,.014,.030,'#273e36');
+  ctx.strokeStyle='#302536';ctx.lineWidth=S*.018;ctx.beginPath();ctx.moveTo(k*S*.043,-S*.024);ctx.quadraticCurveTo(k*S*.09,-S*.045,k*S*.141,-S*.034);ctx.stroke();
+  oval(k*.088-.012,-.010,.015,.018,'#fff9ef');oval(k*.15,.082,.035,.014,'#efadb1');
+ }
+ // Long, asymmetrical fringe sweeps across one side of the face.
+ shape([[-.27,-.15],[-.21,-.31],[-.075,-.37],[.11,-.33],[.235,-.19],[.21,-.06],[.15,-.17],[.07,-.22],[.025,-.12],[-.045,-.015],[-.09,.045],[-.13,-.11],[-.19,-.065],[-.20,-.18]],hair);
+ ctx.strokeStyle='#765583';ctx.lineWidth=S*.014;ctx.beginPath();ctx.moveTo(-S*.18,-S*.25);ctx.bezierCurveTo(-S*.11,-S*.32,S*.015,-S*.31,S*.10,-S*.25);ctx.stroke();
+ ctx.strokeStyle='#604568';ctx.lineWidth=S*.01;ctx.beginPath();ctx.moveTo(S*.055,-S*.23);ctx.quadraticCurveTo(-S*.04,-S*.15,-S*.085,S*.012);ctx.stroke();
+ ctx.strokeStyle='#9c5965';ctx.lineWidth=S*.012;ctx.beginPath();ctx.moveTo(-S*.035,S*.115);ctx.quadraticCurveTo(S*.008,S*.143,S*.050,S*.111);ctx.stroke();
+ text(a.human?'YOU':a.id%4+1,0,S*.45,S*.14,a.human?'#a8f4e0':'#d5d7e7');
+ const[dx,dy]=DIRS[a.dir];oval(dx*.37,dy*.37,.045,.045,accent);ctx.restore();
+}
 function girl(a,S){
+ if(a.team===0){bombGirl(a,S);return;}
  const x=(a.x+.5)*S,y=(a.y+.5)*S,hair=a.team?'#754329':'#42324f',accent=characterColors[a.id];
  ctx.save();ctx.translate(x,y);if(!a.alive)ctx.globalAlpha=.18;
  if(a.human){ctx.strokeStyle='#a8f4e0';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,S*.46,0,7);ctx.stroke();}
