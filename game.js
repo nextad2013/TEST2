@@ -10,25 +10,6 @@ const touchMap={up:0,right:1,down:2,left:3};document.querySelectorAll('[data-dir
 function sound(type){if(muted||!audio)return;const o=audio.createOscillator(),g=audio.createGain();o.connect(g);g.connect(audio.destination);o.type=type==='boom'?'sawtooth':'sine';o.frequency.setValueAtTime(({boom:95,pickup:720,out:180,bite:280,place:350,eat:520})[type]||300,audio.currentTime);o.frequency.exponentialRampToValueAtTime(45,audio.currentTime+.15);g.gain.setValueAtTime(.035,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+.18);o.start();o.stop(audio.currentTime+.2);}
 function rect(x,y,w,h,color,r=5){ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill();}
 function text(s,x,y,size,color='#fff'){ctx.fillStyle=color;ctx.font=`bold ${size}px Arial`;ctx.textAlign='center';ctx.fillText(s,x,y);}
-// Two shared team silhouettes: fuse pigtails and a beak-shaped bow.
-function headwear(a,S){
- ctx.save();ctx.scale(S,S);const color=characterColors[a.id];
- const shape=(points,fill)=>{ctx.fillStyle=fill;ctx.strokeStyle='#f9e9d5';ctx.lineWidth=.018;ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.fill();ctx.stroke();};
- const circle=(x,y,r,fill)=>{ctx.fillStyle=fill;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();};
- // Keep every accessory seated inside the hairline, overlapping the bangs.
- if(a.team===1){
-  // A cloth headband follows the skull; the single beak bow is sewn onto it.
-  ctx.strokeStyle='#fff0dc';ctx.lineWidth=.085;ctx.beginPath();ctx.moveTo(-.24,-.17);ctx.quadraticCurveTo(0,-.38,.24,-.17);ctx.stroke();
-  ctx.strokeStyle=color;ctx.lineWidth=.05;ctx.beginPath();ctx.moveTo(-.24,-.17);ctx.quadraticCurveTo(0,-.38,.24,-.17);ctx.stroke();
-  shape([[.10,-.22],[-.015,-.125],[.055,-.12],[.145,-.22]],color);
-  shape([[.15,-.22],[.25,-.105],[.27,-.18],[.19,-.27]],color);
-  ctx.fillStyle='#ffe276';ctx.strokeStyle='#9d683b';ctx.lineWidth=.018;ctx.beginPath();ctx.moveTo(.14,-.25);ctx.arc(.14,-.25,.135,Math.PI*.23,Math.PI*1.77);ctx.closePath();ctx.fill();ctx.stroke();
-  circle(.105,-.308,.016,'#362b36');
-  ctx.beginPath();ctx.moveTo(.04,-.285);ctx.quadraticCurveTo(.06,-.34,.13,-.34);ctx.strokeStyle='#fff8cf';ctx.lineWidth=.018;ctx.stroke();
-  circle(.105,-.205,.024,'#f3a2a5');
- }
- ctx.restore();
-}
 // Separate drawing path keeps the approved Pack Girl artwork unchanged.
 function bombGirl(a,S){
  const accent=characterColors[a.id],hair='#3b294b',edge='#211a30';
@@ -68,29 +49,48 @@ function bombGirl(a,S){
  text(a.human?'YOU':a.id%4+1,0,S*.45,S*.14,a.human?'#a8f4e0':'#d5d7e7');
  const[dx,dy]=DIRS[a.dir];oval(dx*.37,dy*.37,.045,.045,accent);ctx.restore();
 }
-function girl(a,S){
- if(a.team===0){bombGirl(a,S);return;}
- const x=(a.x+.5)*S,y=(a.y+.5)*S,hair=a.team?'#754329':'#42324f',accent=characterColors[a.id];
- ctx.save();ctx.translate(x,y);if(!a.alive)ctx.globalAlpha=.18;
+function packGirl(a,S){
+ const hair='#b9513d',edge='#592c32',accent=characterColors[a.id];
+ ctx.save();ctx.translate((a.x+.5)*S,(a.y+.5)*S);if(!a.alive)ctx.globalAlpha=.18;
  if(a.human){ctx.strokeStyle='#a8f4e0';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,S*.46,0,7);ctx.stroke();}
- const shape=(points,fill)=>{ctx.fillStyle=fill;ctx.beginPath();points.forEach(([px,py],i)=>i?ctx.lineTo(px*S,py*S):ctx.moveTo(px*S,py*S));ctx.closePath();ctx.fill();};
- // Brown shoulder-length hair / dark violet bob; team colors belong to clothes.
- rect(-S*.29,-S*.31,S*.58,S*(a.team?.65:.56),hair,S*.20);
- if(a.team){shape([[-.28,-.05],[-.32,.29],[-.20,.24],[-.14,.07]],hair);shape([[.28,-.05],[.32,.29],[.20,.24],[.14,.07]],hair);}
- rect(-S*.20,S*.09,S*.40,S*.24,accent,S*.06);
- shape([[-.15,.11],[0,.20],[.15,.11],[.10,.25],[-.10,.25]],'#fff3e5');
- if(!a.team){rect(-S*.105,S*.105,S*.21,S*.045,'#24202f',S*.015);ctx.strokeStyle='#d2cbdf';ctx.lineWidth=S*.012;ctx.beginPath();ctx.arc(0,S*.15,S*.026,0,7);ctx.stroke();}
- else{shape([[-.10,.19],[-.015,.16],[-.015,.25]],accent);shape([[.10,.19],[.015,.16],[.015,.25]],accent);}
- ctx.fillStyle='#ffe0d0';ctx.beginPath();ctx.ellipse(0,-S*.027,S*.224,S*.235,0,0,7);ctx.fill();
- // Contrasting pointed bangs extend visibly below the accessory, toward the eyes.
- if(a.team){shape([[-.24,-.17],[-.19,-.27],[.17,-.27],[.24,-.16],[.19,-.04],[.12,-.16],[.075,-.07],[.015,-.17],[-.04,-.06],[-.105,-.17],[-.18,-.04]],hair);}
- else{shape([[-.25,-.17],[-.16,-.29],[.15,-.28],[.24,-.16],[.17,-.035],[.085,-.14],[-.005,.005],[-.035,-.14],[-.17,-.04]],hair);}
- ctx.strokeStyle=a.team?'#ac7750':'#796089';ctx.lineWidth=S*.014;ctx.beginPath();ctx.moveTo(-S*.18,-S*.18);ctx.quadraticCurveTo(-S*.07,-S*.23,S*.01,-S*.18);ctx.stroke();
- for(const k of[-1,1]){ctx.fillStyle='#302735';ctx.beginPath();ctx.ellipse(k*S*.088,S*.015,S*.045,S*.069,0,0,7);ctx.fill();ctx.fillStyle=a.team?'#ad7539':'#659b82';ctx.beginPath();ctx.ellipse(k*S*.088,S*.037,S*.029,S*.035,0,0,7);ctx.fill();ctx.strokeStyle='#302735';ctx.lineWidth=S*.018;ctx.beginPath();ctx.moveTo(k*S*.045,-S*.03);ctx.lineTo(k*S*.135,-S*.052);ctx.stroke();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(k*S*.088-S*.012,-S*.013,S*.018,0,7);ctx.fill();ctx.fillStyle='#ef98a6';ctx.beginPath();ctx.ellipse(k*S*.15,S*.09,S*.044,S*.02,0,0,7);ctx.fill();}
- text('ᴗ',0,S*.14,S*.14,'#8c4e59');headwear(a,S);
+ const shape=(points,fill,stroke)=>{ctx.fillStyle=fill;ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x*S,y*S):ctx.moveTo(x*S,y*S));ctx.closePath();ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=S*.014;ctx.stroke();}};
+ const oval=(x,y,rx,ry,fill)=>{ctx.fillStyle=fill;ctx.beginPath();ctx.ellipse(x*S,y*S,rx*S,ry*S,0,0,Math.PI*2);ctx.fill();};
+ const walking=a.alive&&a.wait>0&&a.motion,phase=walking?1-a.wait/a.motion.duration:0,swing=walking?Math.sin(phase*Math.PI*2)*.018:0;
+ // Copper hair and a compact side braid, readable in a single maze cell.
+ oval(0,-.085,.282,.285,hair);
+ for(let i=0;i<3;i++){oval(-.23+swing,.12+i*.065,.065-i*.006,.052,'#8f3c35');oval(-.24+swing,.10+i*.065,.049-i*.005,.042,i%2?'#d16b4a':'#be5842');}
+ shape([[-.26+swing,.25],[-.29+swing,.32],[-.20+swing,.30]],hair);
+ // White shirt, black tie, and four identifying colors on the belt and sleeves.
+ shape([[-.12,.15],[-.20,.21],[-.18,.33],[.18,.33],[.20,.21],[.12,.15]],'#fff7e9',edge);
+ oval(-.205,.25+swing,.043,.061,'#ffdfcb');oval(.205,.25-swing,.043,.061,'#ffdfcb');
+ rect(-S*.23,S*.205,S*.065,S*.045,accent,S*.012);rect(S*.165,S*.205,S*.065,S*.045,accent,S*.012);
+ shape([[-.105,.16],[0,.215],[-.05,.245],[-.15,.19]],'#ffffff',edge);shape([[.105,.16],[0,.215],[.05,.245],[.15,.19]],'#ffffff',edge);
+ shape([[0,.205],[-.03,.24],[-.02,.305],[.02,.305],[.03,.24]],'#302a35');
+ rect(-S*.16,S*.31,S*.32,S*.045,accent,S*.012);
+ oval(-.085,.355+swing,.057,.036,'#342a39');oval(.085,.355-swing,.057,.036,'#342a39');
+ oval(0,-.02,.225,.228,'#ffe1ce');
+ // Makima's golden ringed eyes: strong outer shape, amber iris, concentric ring.
+ for(const k of[-1,1]){
+  oval(k*.091,.012,.049,.067,'#522c32');oval(k*.091,.025,.037,.052,'#ffc04e');
+  ctx.strokeStyle='#b8672a';ctx.lineWidth=S*.011;ctx.beginPath();ctx.ellipse(k*S*.091,S*.025,S*.025,S*.036,0,0,Math.PI*2);ctx.stroke();
+  oval(k*.091,.025,.011,.024,'#75402a');oval(k*.091-.014,-.015,.014,.017,'#fffbed');
+  ctx.strokeStyle='#522c32';ctx.lineWidth=S*.018;ctx.beginPath();ctx.moveTo(k*S*.043,-S*.035);ctx.quadraticCurveTo(k*S*.09,-S*.060,k*S*.145,-S*.041);ctx.stroke();
+  oval(k*.153,.085,.033,.013,'#ee9a96');
+ }
+ // Clearly separated straight fringe, with a long side lock framing each cheek.
+ shape([[-.263,-.16],[-.20,-.30],[-.05,-.35],[.16,-.31],[.26,-.16],[.20,-.075],[.145,-.155],[.11,-.065],[.055,-.15],[.005,-.065],[-.045,-.155],[-.10,-.075],[-.16,-.16],[-.205,-.08]],hair);
+ shape([[-.255,-.14],[-.19,-.10],[-.17,.19],[-.24,.13]],hair);shape([[.255,-.14],[.19,-.10],[.17,.19],[.24,.13]],hair);
+ ctx.strokeStyle='#e98862';ctx.lineWidth=S*.014;ctx.beginPath();ctx.moveTo(-S*.17,-S*.235);ctx.quadraticCurveTo(-S*.04,-S*.29,S*.075,-S*.245);ctx.stroke();
+ ctx.strokeStyle='#9e4e4d';ctx.lineWidth=S*.012;ctx.beginPath();ctx.moveTo(-S*.034,S*.116);ctx.quadraticCurveTo(S*.005,S*.137,S*.044,S*.108);ctx.stroke();
+ // Candidate 2's ribbon: one open-mouth yellow ornament on the left temple.
+ shape([[-.205,-.27],[-.37,-.34],[-.36,-.19],[-.205,-.24]],accent,edge);
+ shape([[-.23,-.235],[-.34,-.115],[-.29,-.11],[-.20,-.23]],accent,edge);
+ ctx.fillStyle='#ffdc59';ctx.strokeStyle='#70452b';ctx.lineWidth=S*.018;ctx.beginPath();ctx.moveTo(-S*.22,-S*.285);ctx.arc(-S*.22,-S*.285,S*.108,Math.PI*.22,Math.PI*1.78);ctx.closePath();ctx.fill();ctx.stroke();
+ oval(-.24,-.332,.014,.014,'#392b31');oval(-.277,-.32,.014,.019,'#fff7c2');
  text(a.human?'YOU':a.id%4+1,0,S*.45,S*.14,a.human?'#a8f4e0':'#d5d7e7');
- const[dx,dy]=DIRS[a.dir];ctx.fillStyle=accent;ctx.beginPath();ctx.arc(dx*S*.37,dy*S*.37,S*.045,0,7);ctx.fill();ctx.restore();
+ const[dx,dy]=DIRS[a.dir];oval(dx*.37,dy*.37,.045,.045,accent);ctx.restore();
 }
+function girl(a,S){if(a.team===0)bombGirl(a,S);else packGirl(a,S);}
 function biteIcon(b,x,y,S){
  const owner=game.actors.find(a=>a.id===b.actor);if(!owner?.alive)return;
  const ownCell=x===owner.x&&y===owner.y,active=b.t<=0&&!b.done;
