@@ -32,7 +32,7 @@ export class Battle{
    this.bites=this.bites.filter(b=>b.actor!==a.id||b.contact);this.events.push('shield');return true;
   }
   const path=this.dashPath(a);if(!path.length)return false;
-  a.specialLeft--;a.glow=2;a.wait=0;a.motion=null;
+  a.specialLeft--;a.glow=.5;a.wait=0;a.motion=null;
   for(const cell of path){
    this.afterimages.push({actor:{...a,motion:null,wait:0},t:.2});
    if(this.map[cell.y][cell.x]===2)this.breakBlock(cell.x,cell.y);
